@@ -1,0 +1,26 @@
+body, td, p {
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+}
+
+.nav-tabs {
+    --bs-nav-tabs-border-width: 3px;
+    --bs-nav-tabs-border-color: #e18a07;
+    --bs-nav-tabs-link-hover-border-color: #e9ecef #e9ecef #e18a07;
+    --bs-nav-tabs-link-active-border-color: #e18a07 #e18a07 #fff;
+}
+
+.help-list li {
+  padding-top: 0.25rem !important;
+  padding-bottom: 0.25rem !important;
+}
+
+div.droptrgt {
+    text-align:center;
+    border: 1px solid #63758C;
+    width: 100%;
+    overflow: hidden;
+    background-color: #fff;
+}

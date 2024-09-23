@@ -1,0 +1,13 @@
+{
+    "title": "The Synthetic Data Generator (SDG)",
+    "description": "This plug-in accepts an i2b2 patient set and generates a synthetic patient set that is statistically similar to the source.",
+    "category": ["sythentic data"],
+    "icons": {
+        "size32x32": "synthetic.png"
+    },
+    "assetDir": "assets",
+    "plugin_version": "1.0",
+    "i2b2_version": "1.8.1",
+    "base": "index.html",
+    "sandbox": true
+}

@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>The Synthetic Data Generator (SDG) Plugin</title>
+        <link rel="stylesheet"  href="assets/bootstrap/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="assets/bootstrap-icons/bootstrap-icons.min.css" />
+        <link rel="stylesheet" href="css/sythndata-main.css" />
+        <script src="js/i2b2-loader.js"></script>
+        <script src="js/sythndata-main.js"></script>
+    </head>
+    <body>
+        <div class="py-4 px-4">
+            <!-- tabs -->
+            <ul class="nav nav-tabs mb-4" id="nav-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="nav-data-tab" data-bs-toggle="tab" data-bs-target="#nav-data" type="button" role="tab"  aria-controls="nav-data" aria-selected="true">Specify Data</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link disabled" id="nav-results-tab" data-bs-toggle="tab" data-bs-target="#nav-results" type="button" role="tab" aria-controls="nav-results" aria-selected="false">View Results</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="nav-help-tab" data-bs-toggle="tab" data-bs-target="#nav-help" type="button" role="tab" aria-controls="nav-help" aria-selected="false">Plugin Help</button>
+                </li>
+            </ul>
+            <!-- end of tabs -->
+
+            <!-- tab contents -->
+            <div class="tab-content" id="nav-tab-content">
+                <div class="tab-pane fade show active" id="nav-data" role="tabpanel" aria-labelledby="nav-data-tab">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="border-bottom">
+                                <p>Drop a patient set onto the approriate input boxes below, then click the "Output Options" tab to specify layout of the resulting data, before clicking on the "View Results" tab to retrieve the synthetic patient set.</p>
+                                <p>For more information, refer to the "Plugin Help" tab.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-6">
+                            <form>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="mb-3 p-3 bg-light">
+                                            <label class="form-label">Patient Set:</label>
+                                            <div class="droptrgt p-2 text-bg-light" id="sythndata-psmaindiv">
+                                                <div id="psmaindiv-content">Drop a patient set here.</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="mb-3 p-3 bg-light">
+                                            <div class="mb-3">
+                                                <label for="statisticalTest" class="form-label">Statistical Test Selector:</label>
+                                                <select class="form-select" id="statisticalTest" name="statisticalTest" aria-label="Statistical test" >
+                                                    <option value="t-test">T-Test</option>
+                                                    <option value="chi-squared">Chi-Squared Test</option>
+                                                    <option value="ks-test">Ks Test</option>
+                                                    <option value="anova-test">ANOVA Test</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" id="statTestAge" type="checkbox" name="statTestAge" />
+                                                <label class="form-check-label mt-1" for="statTestAge">Age</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-3 bg-light">
+                                            <label for="statisticalTest" class="form-label">Static Comparison:</label>
+                                            <div id="staticCompCheck"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="d-grid">
+                                            <button class="btn btn-success" type="button" disabled="disabled">Run</button>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="d-grid">
+                                            <button class="btn btn-primary" type="button" disabled="disabled">Continue</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="nav-results" role="tabpanel" aria-labelledby="nav-results-tab">
+                </div>
+                <div class="tab-pane fade" id="nav-help" role="tabpanel" aria-labelledby="nav-help-tab">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h5 class="border-bottom">Introduction</h5>
+                            <p>This plugin provides the following functions:</p>
+                            <ul class="help-list">
+                                <li>Generates synthetic data that is statistically similar to the data for the selected patient set.</li>
+                                <li>Continuation or recovery of the results for long running data generations after log outs or timeouts.</li>
+                                <li>Statistical demographics information for the selected patient set.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h5 class="border-bottom">Instructions</h5>
+                            <ol class="help-list">
+                                <li>
+                                    Running the data generation:
+                                    <ul class="list-unstyled">
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Navigate to the "Specify Data" tab.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Drag and drop a Patient Set.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Make sure none of the check-boxes are selected.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Click on the "Run" button or switch to the "View Results" tab.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Data generation will start and progress will be shown in teh "View Results" tab.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> When data generation is complete, the "View Results" tab will show some statistical information about the data and a link for you to be able to download the data.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> For large number of patients the generation can be long running. Please see next item to see how you can recover the run or results.</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    Recovering the data generation after the application is closed or timed out:
+                                    <ul class="list-unstyled">
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Navigate to the "Specify Data" tab.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Drag and drop a Patient Set for which you started the generation in a previous session.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Click on the "Continue" button.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> You will switch to the "View Results" tab and will be either shown the progress or the results.</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    Showing statistical demographics information: 
+                                    <ul class="list-unstyled">
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Navigate to the "Specify Data" tab.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Drag and drop a Patient Set.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Select demographics information configuration using the check boxes in the "Statistical Test Selector" and/or the "Static Comparison".</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Click on the "Run " button or switch to the "View Results" tab.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Information generation will start and progress will be shown in the "View Results" tab.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> When information generation is complete the "View Results" tab will show the information.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Click on the "Synthesize " button to start data generation directly from the information display.</li>
+                                    </ul>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end of tab contents -->
+        </div>
+        <!-- end of page padding -->
+        <script src="assets/jquery/jquery-3.6.3.min.js"></script>
+        <script src="assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+    </body>
+</html>
