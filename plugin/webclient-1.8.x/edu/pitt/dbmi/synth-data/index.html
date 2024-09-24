@@ -38,20 +38,24 @@
                         </div>
                     </div>
                     <div class="row mt-4">
-                        <div class="col-6">
+                        <div class="col-8">
                             <form>
                                 <div class="row">
                                     <div class="col-12">
                                         <div class="mb-3 p-3 bg-light">
                                             <label class="form-label">Patient Set:</label>
-                                            <div class="droptrgt p-2 text-bg-light" id="sythndata-psmaindiv">
-                                                <div id="psmaindiv-content">Drop a patient set here.</div>
+                                            <div class="input-group">
+                                                <div class="form-control droptrgt p-2 text-bg-light" id="sythndata-psmaindiv">
+                                                    <div id="psmaindiv-content">Drop a patient set here.</div>
+                                                </div>
+                                                <button class="btn btn-success btn-block" id="run" type="button" disabled="disabled">Run</button>
+                                                <button class="btn btn-primary btn-block" id="continue" type="button" disabled="disabled">Continue</button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="row">
-                                    <div class="col-6">
+                                    <div class="col-4">
                                         <div class="mb-3 p-3 bg-light">
                                             <div class="mb-3">
                                                 <label for="statisticalTest" class="form-label">Statistical Test Selector:</label>
@@ -68,22 +72,10 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-6">
+                                    <div class="col-3">
                                         <div class="p-3 bg-light">
                                             <label for="statisticalTest" class="form-label">Static Comparison:</label>
                                             <div id="staticCompCheck"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-6">
-                                        <div class="d-grid">
-                                            <button class="btn btn-success" type="button" disabled="disabled">Run</button>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="d-grid">
-                                            <button class="btn btn-primary" type="button" disabled="disabled">Continue</button>
                                         </div>
                                     </div>
                                 </div>
@@ -97,7 +89,7 @@
                     <div class="row">
                         <div class="col-md-12">
                             <h5 class="border-bottom">Introduction</h5>
-                            <p>This plugin provides the following functions:</p>
+                            This plugin provides the following functions:
                             <ul class="help-list">
                                 <li>Generates synthetic data that is statistically similar to the data for the selected patient set.</li>
                                 <li>Continuation or recovery of the results for long running data generations after log outs or timeouts.</li>

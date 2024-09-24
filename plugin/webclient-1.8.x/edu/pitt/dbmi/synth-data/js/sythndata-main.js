@@ -71,6 +71,9 @@ i2b2.sythndata.patientSetDropped = function (sdxData) {
 
     let mainDiv = document.getElementById('psmaindiv-content');
     mainDiv.innerText = title;
+
+    document.getElementById('run').disabled = false;
+    document.getElementById('continue').disabled = false;
 };
 
 
