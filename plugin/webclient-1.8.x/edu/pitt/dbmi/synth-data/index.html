@@ -6,6 +6,7 @@
         <title>The Synthetic Data Generator (SDG) Plugin</title>
         <link rel="stylesheet"  href="assets/bootstrap/css/bootstrap.min.css" />
         <link rel="stylesheet" href="assets/bootstrap-icons/bootstrap-icons.min.css" />
+        <link rel="stylesheet" href="assets/c3code/c3.css" />
         <link rel="stylesheet" href="css/sythndata-main.css" />
         <script src="js/i2b2-loader.js"></script>
         <script src="js/sythndata-main.js"></script>
@@ -25,7 +26,6 @@
                 </li>
             </ul>
             <!-- end of tabs -->
-
             <!-- tab contents -->
             <div class="tab-content" id="nav-tab-content">
                 <div class="tab-pane fade show active" id="nav-data" role="tabpanel" aria-labelledby="nav-data-tab">
@@ -48,8 +48,8 @@
                                                 <div class="form-control droptrgt p-2 text-bg-light" id="sythndata-psmaindiv">
                                                     <div id="psmaindiv-content">Drop a patient set here.</div>
                                                 </div>
-                                                <button class="btn btn-success btn-block" id="run" type="button" disabled="disabled">Run</button>
-                                                <button class="btn btn-primary btn-block" id="continue" type="button" disabled="disabled">Continue</button>
+                                                <button class="btn btn-success" id="runQuery" type="button" disabled="disabled">Run</button>
+                                                <button class="btn btn-primary" id="continueLast" type="button" disabled="disabled">Continue</button>
                                             </div>
                                         </div>
                                     </div>
@@ -58,8 +58,8 @@
                                     <div class="col-4">
                                         <div class="mb-3 p-3 bg-light">
                                             <div class="mb-3">
-                                                <label for="statisticalTest" class="form-label">Statistical Test Selector:</label>
-                                                <select class="form-select" id="statisticalTest" name="statisticalTest" aria-label="Statistical test" >
+                                                <label for="statTest" class="form-label fw-bold">Statistical Test Selector:</label>
+                                                <select class="form-select" id="statTest" name="statTest" aria-label="Statistical test" >
                                                     <option value="t-test">T-Test</option>
                                                     <option value="chi-squared">Chi-Squared Test</option>
                                                     <option value="ks-test">Ks Test</option>
@@ -67,14 +67,14 @@
                                                 </select>
                                             </div>
                                             <div class="form-check">
-                                                <input class="form-check-input" id="statTestAge" type="checkbox" name="statTestAge" />
+                                                <input class="form-check-input" id="statTestAge" type="checkbox" name="statTestAge" value="age" />
                                                 <label class="form-check-label mt-1" for="statTestAge">Age</label>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="col-3">
                                         <div class="p-3 bg-light">
-                                            <label for="statisticalTest" class="form-label">Static Comparison:</label>
+                                            <label class="form-label fw-bold">Static Comparison:</label>
                                             <div id="staticCompCheck"></div>
                                         </div>
                                     </div>
@@ -84,6 +84,28 @@
                     </div>
                 </div>
                 <div class="tab-pane fade" id="nav-results" role="tabpanel" aria-labelledby="nav-results-tab">
+                    <div class="row" id="progressStatus" style="display: none;">
+                        <div class="col-md-12">
+                            <h6>Please wait while the Synthetic Data Server creates your dataset.</h6>
+                            <div class="progress" id="dataGenProgress" role="progressbar" aria-label="Generate data progress" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100" style="height: 30px">
+                                <div class="progress-bar fw-bold fs-6" id="dataGenProgressBar" style="width: 0">0%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" id="demographicStatus" style="display: none;">
+                        <div class="col-md-12">
+                            <h6>Stats about the source data of this query:</h6>
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h6 class="mb-4" id="patientCounts">N(patients) size = {counts}</h6>
+                                    <div id="demographInfo">
+                                        <div id="staticCompare" style="display: none;"></div>
+                                        <div id="t-test-elements" style="display: none;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="tab-pane fade" id="nav-help" role="tabpanel" aria-labelledby="nav-help-tab">
                     <div class="row">
@@ -142,7 +164,60 @@
             <!-- end of tab contents -->
         </div>
         <!-- end of page padding -->
+        <!-- message modal -->
+        <div class="modal fade" id="sythndata-message-modal" tabindex="-1" aria-labelledby="sythndata-message-modal-title" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h6 class="modal-title" id="sythndata-message-modal-title">Message Title</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="sythndata-message-modal-message">Message</div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end of message modal -->
+        <!-- progress modal -->
+        <div class="modal fade" id="sythndata-progress-modal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="sythndata-progress-modal-title" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h6 class="modal-title" id="sythndata-progress-modal-title">Progress</h6>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end of progress modal -->
+        <!-- confirm modal -->
+        <div class="modal fade" id="sythndata-confirm-modal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="sythndata-confirm-modal-title" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h6 class="modal-title" id="sythndata-confirm-modal-title">Confirm</h6>
+                    </div>
+                    <div class="modal-body" id="sythndata-confirm-modal-message">Message</div>
+                    <div class="modal-footer">
+                        <button id="modal-btn-no" type="button" class="btn btn-success" data-bs-dismiss="modal">No</button>
+                        <button id="modal-btn-yes" type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="i2b2.sythndata.runQuery();">Yes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end of confirm modal -->
         <script src="assets/jquery/jquery-3.6.3.min.js"></script>
         <script src="assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <script src="assets/d3code/d3.v3.js"></script>
+        <script src="assets/c3code/c3.js"></script>
+        <script src="js/sythndata-charts.js"></script>
     </body>
 </html>
