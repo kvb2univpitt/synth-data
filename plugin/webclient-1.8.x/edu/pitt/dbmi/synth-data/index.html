@@ -48,7 +48,7 @@
                                                 <div class="form-control droptrgt p-2 text-bg-light" id="sythndata-psmaindiv">
                                                     <div id="psmaindiv-content">Drop a patient set here.</div>
                                                 </div>
-                                                <button class="btn btn-success" id="runQuery" type="button" disabled="disabled">Run</button>
+                                                <button class="btn btn-success" id="runQuery" type="button" disabled="disabled">&nbsp;&nbsp;&nbsp;Run&nbsp;&nbsp;&nbsp;</button>
                                                 <button class="btn btn-primary" id="continueLast" type="button" disabled="disabled">Continue</button>
                                             </div>
                                         </div>
@@ -96,12 +96,27 @@
                         <div class="col-md-12">
                             <h6>Stats about the source data of this query:</h6>
                             <div class="card">
-                                <div class="card-body text-center">
-                                    <h6 class="mb-4" id="patientCounts">N(patients) size = {counts}</h6>
-                                    <div id="demographInfo">
-                                        <div id="staticCompare" style="display: none;"></div>
-                                        <div id="t-test-elements" style="display: none;"></div>
+                                <div class="card-header text-center">
+                                    <h5 class="m-0" id="patientCounts">N(patients) size = {counts}</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-sm-6 pe-4" id="stat-test" style="display: none;">
+                                            <h6 class="card-title fw-bold mb-2">Statistical Test</h6>
+                                            <div id="stat-test-plot"></div>
+                                        </div>
+                                        <div class="col-sm-6 ps-4" id="stat-compare" style="display: none;">
+                                            <h6 class="card-title fw-bold mb-2">Static Comparison Elements</h6>
+                                            <div id="stat-compare-checks"></div>
+                                        </div>
                                     </div>
+                                </div>
+                                <div class="card-footer text-center">
+                                    <div class="mb-2" id="synth-actions">
+                                        <button class="btn btn-success me-2" id="startSynth">Synthesize</button>
+                                        <button class="btn btn-secondary" id="cancelSynth">Cancel</button>
+                                    </div>
+                                    All n sizes must be at least 100 to synthesize.
                                 </div>
                             </div>
                         </div>

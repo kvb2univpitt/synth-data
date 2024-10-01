@@ -74,13 +74,21 @@ i2b2.sythndata.rest.fetchStaticList = function (successHandler, errorHandler) {
         error: errorHandler
     });
 };
-
 i2b2.sythndata.rest.fetchDemographicData = function (data, successHandler, errorHandler) {
     $.ajax({
         type: 'get',
         contentType: 'application/json',
         url: i2b2.sythndata.rest.url + '/demographicData',
         data: data,
+        success: successHandler,
+        error: errorHandler
+    });
+};
+i2b2.sythndata.rest.fetchLastData = function (patient_set_id, successHandler, errorHandler) {
+    $.ajax({
+        type: 'get',
+        contentType: 'application/json',
+        url: i2b2.sythndata.rest.url + '/lastTask/' + patient_set_id,
         success: successHandler,
         error: errorHandler
     });
@@ -106,6 +114,25 @@ i2b2.sythndata.event.onclickRun = function () {
     } else {
         i2b2.sythndata.runQuery();
     }
+};
+i2b2.sythndata.event.onclickContinue = function () {
+    const origData = i2b2.model.currentRec.origData;
+
+    new Promise((resolve, reject) => {
+        const successHandler = function (data) {
+            resolve(data);
+        };
+        const errorHandler = function (err) {
+            console.error(err);
+            reject(err);
+        };
+        i2b2.sythndata.rest.fetchLastData(origData.PRS_id, successHandler, errorHandler);
+    }).then((data) => {
+        if (data.status === 'NONE') {
+            i2b2.sythndata.modal.message.show('Continue Run Error', 'No previous run found for the patient set.');
+            return;
+        }
+    });
 };
 
 i2b2.sythndata.runSyntheticDataGeneration = function () {
@@ -147,13 +174,65 @@ i2b2.sythndata.getDemographicData = function (patientSetId, sc_value, ttest_valu
 };
 
 i2b2.sythndata.showDemographicInfo = function (demographicData) {
+    // reset previous data
+    $('#stat-test').hide();
+    $('#stat-compare').hide();
+    $('#patientCounts').text('');
+
+    // clear plots
+    document.getElementById('stat-test-plot').innerHTML = '';
+    document.getElementById('stat-compare-checks').innerHTML = '';
+
     $('#patientCounts').text(`N(patients) size = ${demographicData.total_size.toLocaleString("en-US")}`);
+
+    const disableSynthesize = (demographicData.total_size < 100);
+    $("#startSynth").prop("disabled", disableSynthesize);
+    $("#cancelSynth").prop("disabled", disableSynthesize);
+
     if (demographicData.static_result) {
+        const staticCompChecks = document.getElementById('stat-compare-checks');
+        for (const dat of demographicData.static_result.values) {
+            const label = `N(${dat.label}) = ${dat.count.toLocaleString("en-US")}`;
+            const value = dat.value;
+            const id = `${value}Radio`;
+            const count = dat.count;
+            const checked = (count >= 100);
+            const disabled = (dat.count < 100);
+
+            // <input class="form-check-input" type="checkbox" value="{value}" id="{id}" name="{id}" />
+            const inputElement = document.createElement('input');
+            inputElement.className = 'form-check-input';
+            inputElement.type = 'checkbox';
+            inputElement.id = id;
+            inputElement.name = id;
+            inputElement.value = value;
+            inputElement.checked = checked;
+            inputElement.disabled = disabled;
+
+            // <label class="form-check-label" for="{value}">{label}</label>
+            const labelElement = document.createElement('label');
+            labelElement.className = 'form-check-label';
+            labelElement.for = id;
+            labelElement.innerText = label;
+            if (disabled) {
+                labelElement.title = 'Unable to use because population is under threshold.';
+            }
+
+            // <div class="form-check">
+            const formCheck = document.createElement('div');
+            formCheck.className = 'form-check';
+            formCheck.appendChild(inputElement);
+            formCheck.appendChild(labelElement);
+
+            staticCompChecks.appendChild(formCheck);
+        }
+
+        $('#stat-compare').show();
     }
     if (demographicData.ttest_result) {
-        $('#t-test-elements').show();
+        $('#stat-test').show();
         const ttest = demographicData.ttest_result;
-        i2b2.sythndata.boxAndWhiskerPlot('t-test-elements', ttest.values, ttest.ttest_label, `Box and Whisker: ${ttest.ttest_label}`, 0);
+        i2b2.sythndata.boxAndWhiskerPlot('stat-test-plot', ttest.values, ttest.ttest_label, `Box and Whisker: ${ttest.ttest_label}`, 0);
     }
 
     $('#progressStatus').hide();
@@ -214,40 +293,54 @@ i2b2.sythndata.runQuery = function () {
     } else {
         i2b2.sythndata.runSyntheticDataGeneration();
     }
-    
+
     i2b2.sythndata.tab.enable('#nav-data-tab');
+};
+
+i2b2.sythndata.createRadioButton = function (radioName, label, value, id, checked) {
+    // <div class="form-check">
+    const divElement = document.createElement('div');
+    divElement.className = 'form-check';
+
+    // <input class="form-check-input" type="radio" name="statComparison" id="{value}" value="{value}" />
+    const inputElement = document.createElement('input');
+    inputElement.className = 'form-check-input';
+    inputElement.type = 'radio';
+    inputElement.id = id;
+    inputElement.name = radioName;
+    inputElement.value = value;
+    inputElement.checked = checked;
+
+    // <label class="form-check-label" for="{value}">{label}</label>
+    const labelElement = document.createElement('label');
+    labelElement.className = 'form-check-label';
+    labelElement.setAttribute('for', id);
+    labelElement.innerText = label;
+
+    const formRadio = document.createElement('div');
+    formRadio.className = 'form-check';
+    formRadio.appendChild(inputElement);
+    formRadio.appendChild(labelElement);
+
+    return formRadio;
 };
 
 i2b2.sythndata.getStaticList = function () {
     const successHandler = function (data) {
         const staticCompCheck = document.getElementById('staticCompCheck');
         const radioName = 'statComparison';
+
+        // option for selecting none
+        const noneRadio = i2b2.sythndata.createRadioButton(radioName, 'None', '', 'none', true);
+        staticCompCheck.appendChild(noneRadio);
+
+        // options
         for (const dat of data) {
             const label = dat.label;
             const value = dat.value;
+            const id = `${value}Radio`;
 
-            // <div class="form-check">
-            const divElement = document.createElement('div');
-            divElement.className = 'form-check';
-
-            // <input class="form-check-input" type="radio" name="statComparison" id="{value}" value="{value}" />
-            const inputElement = document.createElement('input');
-            inputElement.className = 'form-check-input';
-            inputElement.type = 'radio';
-            inputElement.id = value;
-            inputElement.name = radioName;
-            inputElement.value = value;
-
-            // <label class="form-check-label" for="{value}">{label}</label>
-            const labelElement = document.createElement('label');
-            labelElement.className = 'form-check-label';
-            labelElement.setAttribute('for', value);
-            labelElement.innerText = label;
-
-            const formRadio = document.createElement('div');
-            formRadio.className = 'form-check';
-            formRadio.appendChild(inputElement);
-            formRadio.appendChild(labelElement);
+            const formRadio = i2b2.sythndata.createRadioButton(radioName, label, value, id, false);
 
             staticCompCheck.appendChild(formRadio);
         }
@@ -287,5 +380,6 @@ window.addEventListener("I2B2_READY", () => {
         i2b2.sythndata.getStaticList();
 
         $('#runQuery').click(i2b2.sythndata.event.onclickRun);
+        $('#continueLast').click(i2b2.sythndata.event.onclickContinue);
     });
 });
