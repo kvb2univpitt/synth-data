@@ -193,6 +193,26 @@ i2b2.sythndata.progressBar.reset = function () {
     }, 500);
 };
 
+i2b2.sythndata.view = {};
+i2b2.sythndata.view.showProgressStatus = function () {
+    $('#progressStatus').show();
+    $('#demographicStatus').hide();
+    $('#errorStatus').hide();
+};
+i2b2.sythndata.view.showDemographicStatus = function () {
+    $('#progressStatus').hide();
+    $('#demographicStatus').show();
+    $('#errorStatus').hide();
+};
+i2b2.sythndata.view.showErrorStatus = function (title, message) {
+    $('#errorTitle').text(title);
+    $('#errorMessage').text(message);
+
+    $('#progressStatus').hide();
+    $('#demographicStatus').hide();
+    $('#errorStatus').show();
+};
+
 // update progress bar in UI.
 i2b2.sythndata.updateProgress = function (progress) {
     const meta_value = progress.current_step;
@@ -256,13 +276,10 @@ i2b2.sythndata.progressSyntheticDataGeneration = function (taskURL, inprogress) 
     }, (errorMessage) => {
         i2b2.model.currentTask.status = "failure";
 
-        console.log(errorMessage);
-        alert('Error - The data generation failed.');
-//        jQuery("#syntheticData-Complete").hide();
-//        jQuery("#syntheticData-Loading").hide();
-//        jQuery('#demographic-status').hide();
-//        jQuery("#syntheticData-NoData").show();
         i2b2.sythndata.progressBar.reset();
+        i2b2.sythndata.view.showErrorStatus('Data Generation Failed', 'Unable to generate synthetic data.');
+
+        console.log(errorMessage);
     });
 };
 
@@ -277,7 +294,6 @@ i2b2.sythndata.runSyntheticDataGeneration = function () {
         alert("Error: Internal Server Error")
         console.log(error);
     });
-    $('#progressStatus').show();
 };
 
 i2b2.sythndata.runDemogProgress = async function () {
@@ -376,8 +392,7 @@ i2b2.sythndata.showDemographicInfo = function (demographicData) {
         i2b2.sythndata.boxAndWhiskerPlot('stat-test-plot', ttest.values, ttest.ttest_label, `Box and Whisker: ${ttest.ttest_label}`, 0);
     }
 
-    $('#progressStatus').hide();
-    $('#demographicStatus').show();
+    i2b2.sythndata.view.showDemographicStatus();
     i2b2.sythndata.tab.enable('#nav-data-tab');
 };
 
@@ -413,9 +428,8 @@ i2b2.sythndata.runQuery = function () {
     i2b2.sythndata.tab.enable('#nav-results-tab');
     i2b2.sythndata.tab.setFocus('#nav-results-tab');
 
+    i2b2.sythndata.view.showProgressStatus();
     if (origData.sc_value || origData.ttest_value) {
-        $('#progressStatus').show();
-
         i2b2.sythndata.runDemogProgress();
 
         // post and await response for URL.
@@ -428,7 +442,7 @@ i2b2.sythndata.runQuery = function () {
             i2b2.sythndata.showDemographicInfo(demographicData);
         }).catch((error) => {
             i2b2.model.currentTask = null;
-            alert("Error: Internal server error")
+            i2b2.sythndata.view.showErrorStatus('Get Demographic Stats Failed', 'Error: Internal server error.');
             console.log(error);
         });
     } else {
