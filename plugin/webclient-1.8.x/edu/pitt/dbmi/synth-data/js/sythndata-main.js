@@ -93,6 +93,27 @@ i2b2.sythndata.rest.fetchLastData = function (patient_set_id, successHandler, er
         error: errorHandler
     });
 };
+i2b2.sythndata.rest.generateSynthData = function (data, successHandler, errorHandler) {
+    $.ajax({
+        type: 'post',
+        contentType: 'application/json',
+        processData: false,
+        url: i2b2.sythndata.rest.url + '/generateSynthData',
+        data: data,
+        success: successHandler,
+        error: errorHandler
+    });
+};
+i2b2.sythndata.rest.getProgressStatus = function (taskURL, successHandler, errorHandler) {
+    $.ajax({
+        type: 'GET',
+        dataType: 'json',
+        crossDomain: 'true',
+        url: i2b2.sythndata.rest.url + taskURL,
+        success: successHandler,
+        error: errorHandler
+    });
+};
 
 /**
  * Event handlers.
@@ -135,7 +156,128 @@ i2b2.sythndata.event.onclickContinue = function () {
     });
 };
 
+// initiate a synthetic dataset processing job.
+i2b2.sythndata.postMessage = function (patient_set_id, sc_value, ttest_value, st_test_value) {
+    return new Promise((resolve, reject) => {
+        const data = JSON.stringify({
+            patient_set_id,
+            st_test_value
+        });
+        const successHandler = function (data) {
+            resolve(data);
+        };
+        const errorHandler = function (err) {
+            console.error(err);
+            reject(err);
+        };
+        i2b2.sythndata.rest.generateSynthData(data, successHandler, errorHandler);
+    });
+};
+
+i2b2.sythndata.progressBar = {};
+i2b2.sythndata.progressBar.setValue = function (percentage) {
+    $('#dataGenProgress').attr('aria-valuenow', percentage);
+    if (percentage === 0) {
+        $('#dataGenProgressBar').css('width', 0).text('');
+    } else {
+        $('#dataGenProgressBar').css('width', percentage + '%').text(`${percentage}%`);
+    }
+};
+i2b2.sythndata.progressBar.setValueWithDescription = function (percentage, description) {
+    i2b2.sythndata.progressBar.setValue(percentage);
+    $('#progressStep').text(description);
+};
+i2b2.sythndata.progressBar.reset = function () {
+    setTimeout(() => {
+        i2b2.sythndata.progressBar.setValueWithDescription(0, '');
+    }, 500);
+};
+
+// update progress bar in UI.
+i2b2.sythndata.updateProgress = function (progress) {
+    const meta_value = progress.current_step;
+    const meta_total = progress.total_steps;
+    const meta_progress = (meta_value / meta_total) * 100;
+    const meta_text = progress.step_description;
+
+    // update progress bar value from progress data
+    i2b2.sythndata.progressBar.setValueWithDescription(meta_progress, meta_text);
+};
+
+i2b2.sythndata.checkStatus = function (taskURL) {
+    return new Promise((resolve, reject) => {
+        const sendRequest = function () {
+            const successHandler = function (data) {
+                if (data.state === 'SUCCESS') {
+                    resolve(data);
+                } else if (data.state === 'FAILURE') {
+                    reject(data);
+                } else {
+                    if (data.state === 'PROGRESS') {
+                        i2b2.sythndata.updateProgress(data.meta);
+                    }
+                    setTimeout(sendRequest, 5000);
+                }
+            };
+            const errorHandler = function (err) {
+                console.error(err);
+                reject(err);
+            };
+            i2b2.sythndata.rest.getProgressStatus(taskURL, successHandler, errorHandler);
+        };
+
+        sendRequest();
+    });
+};
+
+i2b2.sythndata.progressSyntheticDataGeneration = function (taskURL, inprogress) {
+    const serverURL = this.synthServer;
+    const origData = i2b2.model.currentRec.origData;
+
+    i2b2.model.currentTask = {
+        status: "in-progress",
+        setId: origData.PRS_id
+    };
+
+    i2b2.sythndata.progressBar.reset();
+
+    const msg = inprogress ? "Retrieving in-progress process on server" : "Initializing processing on server";
+    $('#progressStep').text(msg);
+
+    // promise will not resolve now until job is complete.
+    i2b2.sythndata.checkStatus(taskURL).then((data) => {
+        i2b2.model.currentTask.status = "success";
+        const results = JSON.parse(data.results);
+        console.info("================================================================================");
+        console.info(results);
+        console.info("================================================================================");
+//        i2b2.sythndata.successSyntheticDataGeneration(results);
+        i2b2.sythndata.progressBar.reset();
+    }, (errorMessage) => {
+        i2b2.model.currentTask.status = "failure";
+
+        console.log(errorMessage);
+        alert('Error - The data generation failed.');
+//        jQuery("#syntheticData-Complete").hide();
+//        jQuery("#syntheticData-Loading").hide();
+//        jQuery('#demographic-status').hide();
+//        jQuery("#syntheticData-NoData").show();
+        i2b2.sythndata.progressBar.reset();
+    });
+};
+
 i2b2.sythndata.runSyntheticDataGeneration = function () {
+    const origData = i2b2.model.currentRec.origData;
+    i2b2.sythndata.postMessage(origData.PRS_id, origData.sc_value, origData.ttest_value, origData.st_test_value).then((postResult) => {
+        const taskURL = postResult.location;
+        const inprogress = postResult.inprogress;
+
+        i2b2.sythndata.progressSyntheticDataGeneration(taskURL, inprogress);
+    }).catch((error) => {
+        alert("Error: Internal Server Error")
+        console.log(error);
+    });
+    $('#progressStatus').show();
 };
 
 i2b2.sythndata.runDemogProgress = async function () {
@@ -148,8 +290,7 @@ i2b2.sythndata.runDemogProgress = async function () {
             percentage += (100 - percentage) / 2;
         }
 
-        $('#dataGenProgressBar').text(`${percentage}%`);
-        $('#dataGenProgressBar').css({"width": `${percentage}%`});
+        i2b2.sythndata.progressBar.setValue(percentage);
         await new Promise(r => setTimeout(r, 1000));
     }
 };
