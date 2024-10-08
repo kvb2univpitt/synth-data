@@ -197,11 +197,19 @@ i2b2.sythndata.view = {};
 i2b2.sythndata.view.showProgressStatus = function () {
     $('#progressStatus').show();
     $('#demographicStatus').hide();
+    $('#synthDataGenStatus').hide();
     $('#errorStatus').hide();
 };
 i2b2.sythndata.view.showDemographicStatus = function () {
     $('#progressStatus').hide();
     $('#demographicStatus').show();
+    $('#synthDataGenStatus').hide();
+    $('#errorStatus').hide();
+};
+i2b2.sythndata.view.showSynthDataGenStatus = function () {
+    $('#progressStatus').hide();
+    $('#demographicStatus').hide();
+    $('#synthDataGenStatus').show();
     $('#errorStatus').hide();
 };
 i2b2.sythndata.view.showErrorStatus = function (title, message) {
@@ -210,7 +218,84 @@ i2b2.sythndata.view.showErrorStatus = function (title, message) {
 
     $('#progressStatus').hide();
     $('#demographicStatus').hide();
+    $('#synthDataGenStatus').hide();
     $('#errorStatus').show();
+};
+
+i2b2.sythndata.table = {};
+i2b2.sythndata.table.resultSummary = function (patientStat) {
+    $('#totalSourceRecords').text(patientStat.total_source_patients);
+    $('#totalSyntheticRecords').text(patientStat.total_synthetic_patients);
+    $('#sourceCodesTotals').text(patientStat.cohort_statistics.num_source_icds);
+    $('#syntheticCodesTotals').text(patientStat.cohort_statistics.num_synth_icds);
+};
+i2b2.sythndata.table.tTest = function (patientStat) {
+    if (patientStat.ttest_result) {
+        const ttest_result = JSON.parse(patientStat.ttest_result);
+
+        $('#stTestValue').text(ttest_result.st_test_value);
+        $('#tTestResultField').text(ttest_result.field);
+        $('#pValue').text(ttest_result.p_val.toPrecision(3));
+
+        // t-test
+        $('#meanSource').text(ttest_result.source.mean.toFixed(0));
+        $('#meanSynth').text(ttest_result.synth.mean.toFixed(0));
+
+        $('#medianSource').text(ttest_result.source.median.toFixed(0));
+        $('#medianSynth').text(ttest_result.synth.median.toFixed(0));
+
+        $('#firstQuartSource').text(ttest_result.source.Q1.toFixed(0));
+        $('#firstQuartSynth').text(ttest_result.synth.Q1.toFixed(0));
+
+        $('#thirdQuartSource').text(ttest_result.source.Q3.toFixed(0));
+        $('#thirdQuartSynth').text(ttest_result.synth.Q3.toFixed(0));
+
+        $('#tTestView').show();
+    } else {
+        $('#tTestView').hide();
+    }
+};
+
+i2b2.sythndata.plot = {};
+i2b2.sythndata.plot.ageSourceAndSynth = function (patientStat) {
+    const result = JSON.parse(patientStat.ttest_result);
+    i2b2.sythndata.boxAndWhiskerPlot('ageBoxAndWhiskerPlotSource', result.source, 'Source', '', 0);
+    i2b2.sythndata.boxAndWhiskerPlot('ageBoxAndWhiskerPlotSynth', result.synth, 'Synth', '', 1);
+};
+i2b2.sythndata.plot.ageRangeAndGender = function (patientStat, viewOption) {
+    const src_male = patientStat.cohort_statistics.source_age_gender['Male'];
+    const src_female = patientStat.cohort_statistics.source_age_gender['Female'];
+
+    const synth_male = patientStat.cohort_statistics.synth_age_gender['Male'];
+    const synth_female = patientStat.cohort_statistics.synth_age_gender['Female'];
+
+    if (viewOption === "Count") {
+        i2b2.sythndata.demographicPyramidCombinedPlot(src_male.counts, src_female.counts, 'Male - Source', 'Female - Source', synth_male.counts, synth_female.counts, 'Male - Synth', 'Female - Synth', '', 'Count', 'pyramidCombined');
+    } else {
+        i2b2.sythndata.demographicPyramidCombinedPlot(src_male.percentage, src_female.percentage, 'Male - Source', 'Female - Source', synth_male.percentage, synth_female.percentage, 'Male - Synth', 'Female - Synth', '', '%', 'pyramidCombined');
+    }
+};
+
+i2b2.sythndata.successSyntheticDataGeneration = function (results) {
+    const serverURL = i2b2.sythndata.rest.url;
+    const origData = i2b2.model.currentRec.origData;
+
+    //pass return results in so they display.
+    const downloadURLzip = serverURL + '/patientSet/zip/' + results.output_filename_zip;
+
+    $('#patientSetName').text(origData.title);
+
+    i2b2.sythndata.table.resultSummary(results);
+    i2b2.sythndata.table.tTest(results);
+
+    i2b2.sythndata.plot.ageSourceAndSynth(results);
+
+    const viewOption = $('#ageRangeGenderOption option:selected').val();
+    i2b2.sythndata.plot.ageRangeAndGender(results, viewOption);
+    $('#ageRangeGenderOption').on('change', function () {
+        const view = $('#ageRangeGenderOption option:selected').val();
+        i2b2.sythndata.plot.ageRangeAndGender(results, view);
+    });
 };
 
 // update progress bar in UI.
@@ -271,8 +356,9 @@ i2b2.sythndata.progressSyntheticDataGeneration = function (taskURL, inprogress) 
         console.info("================================================================================");
         console.info(results);
         console.info("================================================================================");
-//        i2b2.sythndata.successSyntheticDataGeneration(results);
+        i2b2.sythndata.successSyntheticDataGeneration(results);
         i2b2.sythndata.progressBar.reset();
+        i2b2.sythndata.view.showSynthDataGenStatus();
     }, (errorMessage) => {
         i2b2.model.currentTask.status = "failure";
 

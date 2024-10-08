@@ -84,6 +84,7 @@
                     </div>
                 </div>
                 <div class="tab-pane fade" id="nav-results" role="tabpanel" aria-labelledby="nav-results-tab">
+                    <!-- progress status -->
                     <div class="row" id="progressStatus" style="display: none;">
                         <div class="col-md-12">
                             <h6>Please wait while the Synthetic Data Server creates your dataset.</h6>
@@ -93,6 +94,8 @@
                             <div id="progressStep"></div>
                         </div>
                     </div>
+                    <!-- end of progress status -->
+                    <!-- demographic status -->
                     <div class="row" id="demographicStatus" style="display: none;">
                         <div class="col-md-12">
                             <h6>Stats about the source data of this query:</h6>
@@ -122,6 +125,130 @@
                             </div>
                         </div>
                     </div>
+                    <!-- end of demographic status -->
+                    <!-- synthetic data gen status -->
+                    <div id="synthDataGenStatus">
+                        <h6 class="border-bottom fw-bold pb-2 mb-4" id="patientSetName">Patient Set Name</h6>
+                        <div class="container text-center">
+                            <!-- "result summary" and "t-test" -->
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <!-- result summary -->
+                                    <div class="card border-success mb-4">
+                                        <h6 class="card-header text-bg-success">Result Summary</h6>
+                                        <div class="card-body">
+                                            <table class="table table-sm table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col"></th>
+                                                        <th scope="col">Source</th>
+                                                        <th scope="col">Synthetic</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="table-group-divider">
+                                                    <tr>
+                                                        <th scope="row">Total Records:</th>
+                                                        <td id="totalSourceRecords"></td>
+                                                        <td id="totalSyntheticRecords"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th scope="row">Total Diagnoses:</th>
+                                                        <td id="sourceCodesTotals"></td>
+                                                        <td id="syntheticCodesTotals"></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <!-- end of result summary -->
+                                </div>
+                                <div class="col-md-4" id="tTestView">
+                                    <!-- t-test -->
+                                    <div class="card border-success mb-4">
+                                        <h6 class="card-header text-bg-success">T-Test</h6>
+                                        <div class="card-body">
+                                            <p>
+                                                <span class="fw-bold" id="stTestValue">test value</span>:&nbsp;<span id="tTestResultField"></span><span class="fw-bold ms-4">p-value: </span><span id="pValue"></span>
+                                            </p>
+                                            <table class="table table-sm table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col"></th>
+                                                        <th scope="col">Source</th>
+                                                        <th scope="col">Synthetic</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="table-group-divider">
+                                                    <tr>
+                                                        <th scope="row">Mean</th>
+                                                        <td id="meanSource"></td>
+                                                        <td id="meanSynth"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th scope="row">First Quartile</th>
+                                                        <td id="firstQuartSource"></td>
+                                                        <td id="firstQuartSynth"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th scope="row">Median</th>
+                                                        <td id="medianSource"></td>
+                                                        <td id="medianSynth"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th scope="row">Third Quartile</th>
+                                                        <td id="thirdQuartSource"></td>
+                                                        <td id="thirdQuartSynth"></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <!-- end of t-test -->
+                                </div>
+                            </div>
+                            <!-- end of "result summary" and "t-test" -->
+                            <!-- "age" and "age range & gender" -->
+                            <div class="row">
+                                <div class="col">
+                                    <!-- "age" -->
+                                    <div class="card border-primary mb-4" style="max-width: 45rem;">
+                                        <h6 class="card-header text-bg-primary">Age</h6>
+                                        <div class="card-body text-center">
+                                            <div class="mb-3" id="ageBoxAndWhiskerPlotSource"></div>
+                                            <div id="ageBoxAndWhiskerPlotSynth"></div>
+                                        </div>
+                                    </div>
+                                    <!-- end of "age" -->
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <!-- "age range & gender" -->
+                                    <div class="card border-primary mb-4" style="max-width: 50rem;">
+                                        <h6 class="card-header text-bg-primary">Age Range & Gender</h6>
+                                        <div class="card-body text-center">
+                                            <div class="row g-2 align-items-center mb-4">
+                                                <div class="col-auto">
+                                                    <label for="ageRangeGenderOption" class="form-label mt-2">Select View Option:</label>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <select id="ageRangeGenderOption" class="form-select form-select-sm" aria-label="View option">
+                                                        <option value="Percentage" selected>Percentage</option>
+                                                        <option value="Count">Count</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div id="pyramidCombined"></div>
+                                        </div>
+                                    </div>
+                                    <!-- end of "age range & gender" -->
+                                </div>
+                            </div>
+                            <!-- end of "age" and "age range & gender" -->
+                        </div>
+                    </div>
+                    <!-- synthetic data gen status -->
+                    <!-- error status -->
                     <div class="row" id="errorStatus">
                         <div class="col-md-6 mx-auto">
                             <div class="card border-danger mb-4">
@@ -132,6 +259,7 @@
                             </div>
                         </div>
                     </div>
+                    <!-- end of error status -->
                 </div>
                 <div class="tab-pane fade" id="nav-help" role="tabpanel" aria-labelledby="nav-help-tab">
                     <div class="row">
