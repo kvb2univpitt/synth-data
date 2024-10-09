@@ -128,124 +128,174 @@
                     <!-- end of demographic status -->
                     <!-- synthetic data gen status -->
                     <div id="synthDataGenStatus">
-                        <h6 class="border-bottom fw-bold pb-2 mb-4" id="patientSetName">Patient Set Name</h6>
-                        <div class="container text-center">
-                            <!-- "result summary" and "t-test" -->
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <!-- result summary -->
-                                    <div class="card border-success mb-4">
-                                        <h6 class="card-header text-bg-success">Result Summary</h6>
-                                        <div class="card-body">
-                                            <table class="table table-sm table-striped">
-                                                <thead>
-                                                    <tr>
-                                                        <th scope="col"></th>
-                                                        <th scope="col">Source</th>
-                                                        <th scope="col">Synthetic</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody class="table-group-divider">
-                                                    <tr>
-                                                        <th scope="row">Total Records:</th>
-                                                        <td id="totalSourceRecords"></td>
-                                                        <td id="totalSyntheticRecords"></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th scope="row">Total Diagnoses:</th>
-                                                        <td id="sourceCodesTotals"></td>
-                                                        <td id="syntheticCodesTotals"></td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                    <!-- end of result summary -->
-                                </div>
-                                <div class="col-md-4" id="tTestView">
-                                    <!-- t-test -->
-                                    <div class="card border-success mb-4">
-                                        <h6 class="card-header text-bg-success">T-Test</h6>
-                                        <div class="card-body">
-                                            <p>
-                                                <span class="fw-bold" id="stTestValue">test value</span>:&nbsp;<span id="tTestResultField"></span><span class="fw-bold ms-4">p-value: </span><span id="pValue"></span>
-                                            </p>
-                                            <table class="table table-sm table-striped">
-                                                <thead>
-                                                    <tr>
-                                                        <th scope="col"></th>
-                                                        <th scope="col">Source</th>
-                                                        <th scope="col">Synthetic</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody class="table-group-divider">
-                                                    <tr>
-                                                        <th scope="row">Mean</th>
-                                                        <td id="meanSource"></td>
-                                                        <td id="meanSynth"></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th scope="row">First Quartile</th>
-                                                        <td id="firstQuartSource"></td>
-                                                        <td id="firstQuartSynth"></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th scope="row">Median</th>
-                                                        <td id="medianSource"></td>
-                                                        <td id="medianSynth"></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <th scope="row">Third Quartile</th>
-                                                        <td id="thirdQuartSource"></td>
-                                                        <td id="thirdQuartSynth"></td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                    <!-- end of t-test -->
-                                </div>
+                        <nav class="navbar bg-body-secondary mb-4">
+                            <div class="container-fluid">
+                                <span class="navbar-brand">Synthetic Data Generation Results</span>
+                                <a class="btn btn-success" id="downloadSynthData" href=""><i class="bi bi-file-arrow-down"></i> Download Synthetic Data Tables</a>
                             </div>
-                            <!-- end of "result summary" and "t-test" -->
-                            <!-- "age" and "age range & gender" -->
-                            <div class="row">
-                                <div class="col">
-                                    <!-- "age" -->
-                                    <div class="card border-primary mb-4" style="max-width: 45rem;">
-                                        <h6 class="card-header text-bg-primary">Age</h6>
-                                        <div class="card-body text-center">
-                                            <div class="mb-3" id="ageBoxAndWhiskerPlotSource"></div>
-                                            <div id="ageBoxAndWhiskerPlotSynth"></div>
-                                        </div>
+                        </nav>
+                        <!-- data generation summary -->
+                        <div class="row">
+                            <div class="col">
+                                <!-- result summary -->
+                                <div class="card border-success mb-3" style="width: 28em; min-width: 28em;">
+                                    <h6 class="card-header text-bg-success">Result Summary</h6>
+                                    <div class="card-body">
+                                        <table class="table table-sm table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col"></th>
+                                                    <th scope="col">Source</th>
+                                                    <th scope="col">Synthetic</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="table-group-divider">
+                                                <tr>
+                                                    <th scope="row">Total Records:</th>
+                                                    <td id="totalSourceRecords"></td>
+                                                    <td id="totalSyntheticRecords"></td>
+                                                </tr>
+                                                <tr>
+                                                    <th scope="row">Total Diagnoses:</th>
+                                                    <td id="sourceCodesTotals"></td>
+                                                    <td id="syntheticCodesTotals"></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
-                                    <!-- end of "age" -->
                                 </div>
-                            </div>
-                            <div class="row">
-                                <div class="col">
-                                    <!-- "age range & gender" -->
-                                    <div class="card border-primary mb-4" style="max-width: 50rem;">
-                                        <h6 class="card-header text-bg-primary">Age Range & Gender</h6>
-                                        <div class="card-body text-center">
-                                            <div class="row g-2 align-items-center mb-4">
-                                                <div class="col-auto">
-                                                    <label for="ageRangeGenderOption" class="form-label mt-2">Select View Option:</label>
-                                                </div>
-                                                <div class="col-auto">
-                                                    <select id="ageRangeGenderOption" class="form-select form-select-sm" aria-label="View option">
-                                                        <option value="Percentage" selected>Percentage</option>
-                                                        <option value="Count">Count</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div id="pyramidCombined"></div>
-                                        </div>
+                                <!-- end of result summary -->
+                                <!-- t-test -->
+                                <div class="card border-success mb-4" id="tTestView" style="width: 28em; min-width: 28em;">
+                                    <h6 class="card-header text-bg-success">T-Test</h6>
+                                    <div class="card-body">
+                                        <p>
+                                            <span class="fw-bold" id="stTestValue">test value</span>:&nbsp;<span id="tTestResultField"></span><span class="fw-bold ms-4">p-value: </span><span id="pValue"></span>
+                                        </p>
+                                        <table class="table table-sm table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col"></th>
+                                                    <th scope="col">Source</th>
+                                                    <th scope="col">Synthetic</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="table-group-divider">
+                                                <tr>
+                                                    <th scope="row">Mean</th>
+                                                    <td id="meanSource"></td>
+                                                    <td id="meanSynth"></td>
+                                                </tr>
+                                                <tr>
+                                                    <th scope="row">First Quartile</th>
+                                                    <td id="firstQuartSource"></td>
+                                                    <td id="firstQuartSynth"></td>
+                                                </tr>
+                                                <tr>
+                                                    <th scope="row">Median</th>
+                                                    <td id="medianSource"></td>
+                                                    <td id="medianSynth"></td>
+                                                </tr>
+                                                <tr>
+                                                    <th scope="row">Third Quartile</th>
+                                                    <td id="thirdQuartSource"></td>
+                                                    <td id="thirdQuartSynth"></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
-                                    <!-- end of "age range & gender" -->
                                 </div>
+                                <!-- end of t-test -->
                             </div>
-                            <!-- end of "age" and "age range & gender" -->
+                            <div class="col">
+                                <!-- "age" -->
+                                <div class="card border-success mb-4" style="max-width: 46em; min-width: 46em;">
+                                    <h6 class="card-header text-bg-success">Age</h6>
+                                    <div class="card-body text-center">
+                                        <div class="mb-3" id="ageBoxAndWhiskerPlotSource"></div>
+                                        <div id="ageBoxAndWhiskerPlotSynth"></div>
+                                    </div>
+                                </div>
+                                <!-- end of "age" -->
+                            </div>
                         </div>
+                        <!-- end of data generation summary -->
+                        <!-- view options for comparison charts -->
+                        <nav class="navbar bg-body-secondary mb-4">
+                            <div class="container-fluid">
+                                <span class="navbar-brand">Comparison Charts</span>
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-auto">
+                                        <label for="compViewOptions" class="form-label mt-2 fs-6">Select View Option:</label>
+                                    </div>
+                                    <div class="col-auto">
+                                        <select id="compViewOptions" class="form-select form-select-sm" aria-label="View option">
+                                            <option value="Percentage" selected>Percentage</option>
+                                            <option value="Count">Count</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </nav>
+                        <!-- end of view options for comparison charts -->
+                        <!-- age statistics -->
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <!-- "age range & gender" -->
+                                <div class="card border-primary mb-4" style="max-width: 52em; min-width: 52em;">
+                                    <h6 class="card-header text-bg-primary">Age Range & Gender</h6>
+                                    <div class="card-body">
+                                        <div id="pyramidCombined"></div>
+                                    </div>
+                                </div>
+                                <!-- end of  "age range & gender" -->
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <!-- race -->
+                                <div class="card border-primary mb-4" style="max-width: 37em; min-width: 37em;">
+                                    <h6 class="card-header text-bg-primary">Race</h6>
+                                    <div class="card-body">
+                                        <div id="raceCompChart"></div>
+                                    </div>
+                                </div>
+                                <!-- end of race -->
+                            </div>
+                            <div class="col-lg-6">
+                                <!-- ethnicity -->
+                                <div class="card border-primary mb-4" style="max-width: 37em; min-width: 37em;">
+                                    <h6 class="card-header text-bg-primary">Ethnicity HISP</h6>
+                                    <div class="card-body">
+                                        <div id="ethnicityCompChart"></div>
+                                    </div>
+                                </div>
+                                <!-- end of ethnicity -->
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <!-- zip codes -->
+                                <div class="card border-primary mb-4" style="max-width: 37em; min-width: 37em;">
+                                    <h6 class="card-header text-bg-primary">Zip Codes</h6>
+                                    <div class="card-body">
+                                        <div id="zipCodesCompChart"></div>
+                                    </div>
+                                </div>
+                                <!-- end of zip codes -->
+                            </div>
+                            <div class="col-lg-6">
+                                <!-- top ICD codes -->
+                                <div class="card border-primary mb-4" style="max-width: 37em; min-width: 37em;">
+                                    <h6 class="card-header text-bg-primary">Top ICD Codes</h6>
+                                    <div class="card-body">
+                                        <div id="topICDCodesCompChart"></div>
+                                    </div>
+                                </div>
+                                <!-- end of top ICD codes -->
+                            </div>
+                        </div>
+                        <!-- end of age statistics -->
                     </div>
                     <!-- synthetic data gen status -->
                     <!-- error status -->

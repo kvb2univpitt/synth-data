@@ -14,6 +14,74 @@ i2b2.sythndata.addTitleToPlot = function (divname, title, yattr) {
             .text(title);
 };
 
+i2b2.sythndata.getMultiRowsColumns = function (fielda, fieldb, namea, nameb) {
+    const keysa = Object.keys(fielda);
+    const keysb = Object.keys(fieldb);
+    const valuesa = [];
+    const valuesb = [];
+
+    var allkeys = keysa.concat(keysb);
+    var keys = allkeys.filter((item, pos) => allkeys.indexOf(item) === pos);
+
+    for (let i = 0; i < keys.length; i++) {
+        if (keysa.includes(keys[i])) {
+            valuesa.push(Number(fielda[keys[i]]));
+        } else {
+            valuesa.push(0.0);
+        }
+        if (keysb.includes(keys[i])) {
+            valuesb.push(Number(fieldb[keys[i]]));
+        } else {
+            valuesb.push(0.0);
+        }
+    }
+
+    const labels = ['x'].concat(keys);
+
+    const rows = [[namea].concat(valuesa), [nameb].concat(valuesb)];
+    return {labels, rows};
+};
+
+i2b2.sythndata.barChart = function (divname, labels, rows, title, ylabel) {
+    const columns = [labels].concat(rows);
+
+    const chart = c3.generate({
+        bindto: '#' + divname,
+        size: {
+            height: 250,
+            width: 500
+        },
+        data: {
+            x: 'x',
+            columns: columns,
+            type: 'bar'
+        },
+        axis: {
+            x: {
+                type: 'category'
+            },
+            y: {
+                label: ylabel
+            }
+        },
+        bar: {
+            width: {
+                ratio: 0.2
+            }
+        },
+        legend: {
+            position: 'right'
+        }
+    });
+    i2b2.sythndata.addTitleToPlot(divname, title, 20);
+};
+
+i2b2.sythndata.multiBarChartPlot = function (fielda, fieldb, namea, nameb, title, ylabel, divname) {
+    const {labels, rows} = i2b2.sythndata.getMultiRowsColumns(fielda, fieldb, namea, nameb);
+
+    i2b2.sythndata.barChart(divname, labels, rows, title, ylabel);
+};
+
 i2b2.sythndata.demographicPyramidCombined = function (divname, labels, rows, title, xlabel) {
     // cind is the color index
     const ylabel = 'Age Range';
@@ -76,34 +144,6 @@ i2b2.sythndata.demographicPyramidCombined = function (divname, labels, rows, tit
     });
     i2b2.sythndata.addTitleToPlot(divname, title, 10);
 };
-
-i2b2.sythndata.getMultiRowsColumns = function (fielda, fieldb, namea, nameb) {
-    const keysa = Object.keys(fielda);
-    const keysb = Object.keys(fieldb);
-    const valuesa = [];
-    const valuesb = [];
-
-    var allkeys = keysa.concat(keysb);
-    var keys = allkeys.filter((item, pos) => allkeys.indexOf(item) === pos);
-
-    for (let i = 0; i < keys.length; i++) {
-        if (keysa.includes(keys[i])) {
-            valuesa.push(Number(fielda[keys[i]]));
-        } else {
-            valuesa.push(0.0);
-        }
-        if (keysb.includes(keys[i])) {
-            valuesb.push(Number(fieldb[keys[i]]));
-        } else {
-            valuesb.push(0.0);
-        }
-    }
-
-    const labels = ['x'].concat(keys);
-
-    const rows = [[namea].concat(valuesa), [nameb].concat(valuesb)];
-    return {labels, rows};
-}
 
 i2b2.sythndata.demographicPyramidCombinedPlot = function (fielda1, fieldb1, namea1, nameb1, fielda2, fieldb2, namea2, nameb2, title, xlabel, divname) {
     let out1 = i2b2.sythndata.getMultiRowsColumns(fielda1, fieldb1, namea1, nameb1);

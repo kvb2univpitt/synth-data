@@ -262,17 +262,35 @@ i2b2.sythndata.plot.ageSourceAndSynth = function (patientStat) {
     i2b2.sythndata.boxAndWhiskerPlot('ageBoxAndWhiskerPlotSource', result.source, 'Source', '', 0);
     i2b2.sythndata.boxAndWhiskerPlot('ageBoxAndWhiskerPlotSynth', result.synth, 'Synth', '', 1);
 };
-i2b2.sythndata.plot.ageRangeAndGender = function (patientStat, viewOption) {
+i2b2.sythndata.plot.comparisonCharts = function (patientStat, viewOption) {
+    // source
     const src_male = patientStat.cohort_statistics.source_age_gender['Male'];
     const src_female = patientStat.cohort_statistics.source_age_gender['Female'];
+    const src_race = patientStat.cohort_statistics.source_race;
+    const src_ethnicity = patientStat.cohort_statistics.source_ethnicity;
+    const src_zip_cd = patientStat.cohort_statistics.source_zip_cd;
+    const src_icd = patientStat.cohort_statistics.src_icd;
 
+    // synthetic
     const synth_male = patientStat.cohort_statistics.synth_age_gender['Male'];
     const synth_female = patientStat.cohort_statistics.synth_age_gender['Female'];
+    const synth_race = patientStat.cohort_statistics.synth_race;
+    const synth_ethnicity = patientStat.cohort_statistics.synth_ethnicity;
+    const synth_zip_cd = patientStat.cohort_statistics.synth_zip_cd;
+    const synth_icd = patientStat.cohort_statistics.synth_icd;
 
-    if (viewOption === "Count") {
+    if (viewOption === 'Count') {
         i2b2.sythndata.demographicPyramidCombinedPlot(src_male.counts, src_female.counts, 'Male - Source', 'Female - Source', synth_male.counts, synth_female.counts, 'Male - Synth', 'Female - Synth', '', 'Count', 'pyramidCombined');
+        i2b2.sythndata.multiBarChartPlot(src_race.counts, synth_race.counts, 'Source', 'Synth', 'Race', 'Count', 'raceCompChart');
+        i2b2.sythndata.multiBarChartPlot(src_ethnicity.counts, synth_ethnicity.counts, 'Source', 'Synth', 'Ethnicity: HISP', 'Count', 'ethnicityCompChart');
+        i2b2.sythndata.multiBarChartPlot(src_zip_cd.counts, synth_zip_cd.counts, 'Source', 'Synth', 'ZIP Codes', 'Count', 'zipCodesCompChart');
+        i2b2.sythndata.multiBarChartPlot(src_icd.counts, synth_icd.counts, 'Source', 'Synth', 'Top ICD Codes', 'Count', 'topICDCodesCompChart');
     } else {
         i2b2.sythndata.demographicPyramidCombinedPlot(src_male.percentage, src_female.percentage, 'Male - Source', 'Female - Source', synth_male.percentage, synth_female.percentage, 'Male - Synth', 'Female - Synth', '', '%', 'pyramidCombined');
+        i2b2.sythndata.multiBarChartPlot(src_race.percentage, synth_race.percentage, 'Source', 'Synth', 'Race', '%', 'raceCompChart');
+        i2b2.sythndata.multiBarChartPlot(src_ethnicity.percentage, synth_ethnicity.percentage, 'Source', 'Synth', 'Ethnicity: HISP', '%', 'ethnicityCompChart');
+        i2b2.sythndata.multiBarChartPlot(src_zip_cd.percentage, synth_zip_cd.percentage, 'Source', 'Synth', 'ZIP Codes', '%', 'zipCodesCompChart');
+        i2b2.sythndata.multiBarChartPlot(src_icd.percentage, synth_icd.percentage, 'Source', 'Synth', 'Top ICD Codes', '%', 'topICDCodesCompChart');
     }
 };
 
@@ -282,6 +300,7 @@ i2b2.sythndata.successSyntheticDataGeneration = function (results) {
 
     //pass return results in so they display.
     const downloadURLzip = serverURL + '/patientSet/zip/' + results.output_filename_zip;
+    $('#downloadSynthData').attr('href', downloadURLzip);
 
     $('#patientSetName').text(origData.title);
 
@@ -290,11 +309,13 @@ i2b2.sythndata.successSyntheticDataGeneration = function (results) {
 
     i2b2.sythndata.plot.ageSourceAndSynth(results);
 
-    const viewOption = $('#ageRangeGenderOption option:selected').val();
-    i2b2.sythndata.plot.ageRangeAndGender(results, viewOption);
-    $('#ageRangeGenderOption').on('change', function () {
-        const view = $('#ageRangeGenderOption option:selected').val();
-        i2b2.sythndata.plot.ageRangeAndGender(results, view);
+    const viewOption = $('#compViewOptions option:selected').val();
+    i2b2.sythndata.plot.comparisonCharts(results, viewOption);
+
+    $('#compViewOptions').on('change', function () {
+        const viewOpt = $('#compViewOptions option:selected').val();
+
+        i2b2.sythndata.plot.comparisonCharts(results, viewOpt);
     });
 };
 
@@ -318,9 +339,9 @@ i2b2.sythndata.checkStatus = function (taskURL) {
                 } else if (data.state === 'FAILURE') {
                     reject(data);
                 } else {
-                    if (data.state === 'PROGRESS') {
-                        i2b2.sythndata.updateProgress(data.meta);
-                    }
+//                    if (data.state === 'PROGRESS') {
+//                        i2b2.sythndata.updateProgress(data.meta);
+//                    }
                     setTimeout(sendRequest, 5000);
                 }
             };

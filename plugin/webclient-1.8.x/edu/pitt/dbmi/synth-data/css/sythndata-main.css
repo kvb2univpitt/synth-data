@@ -29,34 +29,27 @@ div.droptrgt {
     stroke-dasharray: 3 3;
     stroke: lightblue;
 }
-
 .c3-xgrid-line.gridSynth line {
     stroke-dasharray: 3 3;
     stroke: rgb(244, 194, 102);
 }
-
 .c3-xgrid-line.gridQSource line {
     stroke-dasharray: 2 10;
     stroke: lightblue;
 }
-
 .c3-xgrid-line.gridQSynth line {
     stroke-dasharray: 2 10;
     stroke: rgb(244, 194, 102);
 }
-
 .c3-axis-x-label {
     font-size: medium;
 }
-
 .c3-grid text {
     font-size: small;
 }
-
 .c3-grid.gridBW text {
     fill: #000;
 }
-
 .c3-xgrid-line.gridBW line {
     stroke-dasharray: 2 10;
     stroke: rgb(23, 23, 23);
