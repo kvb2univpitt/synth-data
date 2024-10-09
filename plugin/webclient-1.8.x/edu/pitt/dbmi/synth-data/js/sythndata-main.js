@@ -259,6 +259,7 @@ i2b2.sythndata.table.tTest = function (patientStat) {
 i2b2.sythndata.plot = {};
 i2b2.sythndata.plot.ageSourceAndSynth = function (patientStat) {
     const result = JSON.parse(patientStat.ttest_result);
+
     i2b2.sythndata.boxAndWhiskerPlot('ageBoxAndWhiskerPlotSource', result.source, 'Source', '', 0);
     i2b2.sythndata.boxAndWhiskerPlot('ageBoxAndWhiskerPlotSynth', result.synth, 'Synth', '', 1);
 };
@@ -293,6 +294,57 @@ i2b2.sythndata.plot.comparisonCharts = function (patientStat, viewOption) {
         i2b2.sythndata.multiBarChartPlot(src_icd.percentage, synth_icd.percentage, 'Source', 'Synth', 'Top ICD Codes', '%', 'topICDCodesCompChart');
     }
 };
+i2b2.sythndata.plot.relatedCDChart = function (source_related_cd, synth_related_cd, cd) {
+    $('#topComorbTitle').text('Top Comorbidities for ' + cd);
+
+    i2b2.sythndata.donutChart('donutRelatedIcdSource', source_related_cd[cd], 'Source - ' + cd, 0);
+    i2b2.sythndata.donutChart('donutRelatedIcdSynth', synth_related_cd[cd], 'Synthetic - ' + cd, 1);
+};
+i2b2.sythndata.plot.icdAgeDistributionChart = function (fa, fb, icdOpt, viewOpt, divname) {
+    $('#icdAgeDistributionTitle').text(`Age Distribution for ${icdOpt} (${viewOpt})`);
+
+    const xlabel = 'Age';
+    if (!fa.hasOwnProperty(icdOpt) || !fb.hasOwnProperty(icdOpt)) {
+        document.getElementById(divname).style.display = "none";
+        jQuery("#violinChartTitle").text('');
+    } else {
+        document.getElementById(divname).style.display = '';
+        f1 = JSON.parse(fa[icdOpt]);
+        f2 = JSON.parse(fb[icdOpt]);
+        x = f1.x;
+        if (viewOpt === 'Count') {
+            var y1 = f1.counts;
+            var y2 = f2.counts;
+            var ylabel = 'Count';
+        } else {
+            var y1 = f1.percentage;
+            var y2 = f2.percentage;
+            var ylabel = '%';
+        }
+
+        var rows = [
+            ['x'].concat(x),
+            ['Source'].concat(y1),
+            ['Synth'].concat(y2)
+        ];
+
+        var statDict = {
+            'median': {
+                "Source": f1.median,
+                "Synth": f2.median
+            },
+            'Q1': {
+                "Source": f1.Q1,
+                "Synth": f2.Q1
+            },
+            'Q3': {
+                "Source": f1.Q3,
+                "Synth": f2.Q3
+            }
+        };
+        i2b2.sythndata.violinChart(divname, rows, statDict, xlabel, ylabel);
+    }
+};
 
 i2b2.sythndata.successSyntheticDataGeneration = function (results) {
     const serverURL = i2b2.sythndata.rest.url;
@@ -309,13 +361,43 @@ i2b2.sythndata.successSyntheticDataGeneration = function (results) {
 
     i2b2.sythndata.plot.ageSourceAndSynth(results);
 
+    // comparison charts
     const viewOption = $('#compViewOptions option:selected').val();
     i2b2.sythndata.plot.comparisonCharts(results, viewOption);
 
+
+    // top comorbidity charts
+    const source_related_cd = results.cohort_statistics.source_related_list_icd;
+    const synth_related_cd = results.cohort_statistics.synth_related_list_icd;
+    const mainkeysa = Object.keys(source_related_cd);
+    const mainkeysb = Object.keys(synth_related_cd);
+
+    // add options to select
+    mainkeysa.filter(value => mainkeysb.includes(value))
+            .forEach(option => $('#icdCodeOptions').append($('<option>', {value: option, text: option})));
+
+    const icdCodeOption = $('#icdCodeOptions option:selected').val();
+    i2b2.sythndata.plot.relatedCDChart(source_related_cd, synth_related_cd, icdCodeOption);
+
+    // ICD age distribution
+    const fa = results.cohort_statistics.src_icd_age_dist;
+    const fb = results.cohort_statistics.synth_icd_age_dist;
+    i2b2.sythndata.plot.icdAgeDistributionChart(fa, fb, icdCodeOption, viewOption, 'icdAgeDistributionChart');
+
+    // set action listeners
     $('#compViewOptions').on('change', function () {
         const viewOpt = $('#compViewOptions option:selected').val();
+        const icdCodeOpt = $('#icdCodeOptions option:selected').val();
 
         i2b2.sythndata.plot.comparisonCharts(results, viewOpt);
+        i2b2.sythndata.plot.icdAgeDistributionChart(fa, fb, icdCodeOpt, viewOpt, 'icdAgeDistributionChart');
+    });
+    $('#icdCodeOptions').on('change', function () {
+        const viewOpt = $('#compViewOptions option:selected').val();
+        const icdCodeOpt = $('#icdCodeOptions option:selected').val();
+
+        i2b2.sythndata.plot.relatedCDChart(source_related_cd, synth_related_cd, icdCodeOpt);
+        i2b2.sythndata.plot.icdAgeDistributionChart(fa, fb, icdCodeOpt, viewOpt, 'icdAgeDistributionChart');
     });
 };
 
@@ -374,9 +456,6 @@ i2b2.sythndata.progressSyntheticDataGeneration = function (taskURL, inprogress) 
     i2b2.sythndata.checkStatus(taskURL).then((data) => {
         i2b2.model.currentTask.status = "success";
         const results = JSON.parse(data.results);
-        console.info("================================================================================");
-        console.info(results);
-        console.info("================================================================================");
         i2b2.sythndata.successSyntheticDataGeneration(results);
         i2b2.sythndata.progressBar.reset();
         i2b2.sythndata.view.showSynthDataGenStatus();

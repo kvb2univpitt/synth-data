@@ -5,6 +5,9 @@ if (typeof i2b2.sythndata === 'undefined') {
     i2b2.sythndata = {};
 }
 
+const blue_patterns = ['#144D75', '#16537E', '#175987', '#195F90', '#1A6599', '#1C6BA2', '#1D71AB', '#2A7EB8', '#3585BC', '#418BBF', '#4C92C3', '#5799C7', '#62A0CB'];
+const orange_patterns = ['#A65309', '#B3590A', '#BF5F0B', '#CC660B', '#D96C0C', '#E6720D', '#F2790D', '#FF851A', '#FF8C26', '#FF9232', '#FF993E', '#FF9F4A'];
+
 i2b2.sythndata.addTitleToPlot = function (divname, title, yattr) {
     d3.select('#' + divname + ' svg').append('text')
             .attr('x', d3.select('#' + divname + ' svg').node().getBoundingClientRect().width / 2)
@@ -40,6 +43,90 @@ i2b2.sythndata.getMultiRowsColumns = function (fielda, fieldb, namea, nameb) {
 
     const rows = [[namea].concat(valuesa), [nameb].concat(valuesb)];
     return {labels, rows};
+};
+
+i2b2.sythndata.violinChart = function (divname, rows, statDict, xlabel, ylabel) {
+    const chart = c3.generate({
+        bindto: '#' + divname,
+        size: {
+            height: 350,
+            width: 700
+        },
+        data: {
+            x: 'x',
+            columns: rows,
+            types: {
+                'Source': 'area-spline',
+                'Synth': 'area-spline'
+            }
+        },
+        axis: {
+            // rotated: true,
+            x: {
+                label: xlabel
+                        // inverted: true
+            },
+            y: {
+                label: ylabel,
+                tick: {
+                    format: function (d) {
+                        return Math.abs(d);
+                    }
+                }
+            }
+        },
+        grid: {
+            x: {
+                lines: [
+                    {value: statDict['median']['Source'], class: 'gridSource'},
+                    {value: statDict['median']['Synth'], class: 'gridSynth', text: 'median'},
+                    {value: statDict['Q1']['Source'], class: 'gridQSource'},
+                    {value: statDict['Q1']['Synth'], class: 'gridQSynth', text: 'Q1'},
+                    {value: statDict['Q3']['Source'], class: 'gridQSource'},
+                    {value: statDict['Q3']['Synth'], class: 'gridQSynth', text: 'Q3'}
+                ]
+            }
+        },
+        point: {
+            show: false
+        },
+        legend: {
+            position: 'right'
+        }
+    });
+};
+
+i2b2.sythndata.donutChart = function (divname, rows, title, cind, height = 350, width = 500) {
+    if (rows.length > 0) {
+        const patterns = (cind === 0) ? blue_patterns : orange_patterns;
+
+        const chart = c3.generate({
+            bindto: '#' + divname,
+            size: {
+                height: height,
+                width: width
+            },
+            data: {
+                // iris data from R
+                columns: rows,
+                type: 'donut'
+            },
+            color: {
+                pattern: patterns
+            },
+            legend: {
+                position: 'right'
+            },
+            donut: {
+                title: title,
+                label: {
+                    format: function (value, ratio, id) {
+                        return id;
+                    }
+                }
+            }
+        });
+    }
 };
 
 i2b2.sythndata.barChart = function (divname, labels, rows, title, ylabel) {

@@ -223,7 +223,7 @@
                         <!-- view options for comparison charts -->
                         <nav class="navbar bg-body-secondary mb-4">
                             <div class="container-fluid">
-                                <span class="navbar-brand">Comparison Charts</span>
+                                <div class="navbar-brand">Comparison Charts</div>
                                 <div class="row g-2 align-items-center">
                                     <div class="col-auto">
                                         <label for="compViewOptions" class="form-label mt-2 fs-6">Select View Option:</label>
@@ -238,7 +238,6 @@
                             </div>
                         </nav>
                         <!-- end of view options for comparison charts -->
-                        <!-- age statistics -->
                         <div class="row">
                             <div class="col-lg-12">
                                 <!-- "age range & gender" -->
@@ -295,7 +294,53 @@
                                 <!-- end of top ICD codes -->
                             </div>
                         </div>
-                        <!-- end of age statistics -->
+                        <!-- view options for top comorbidities -->
+                        <nav class="navbar bg-body-secondary mb-4">
+                            <div class="container-fluid">
+                                <div class="navbar-brand">Top Comorbidities</div>
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-auto">
+                                        <label for="compViewOptions" class="form-label mt-2 fs-6">Choose an ICD code:</label>
+                                    </div>
+                                    <div class="col-auto">
+                                        <select id="icdCodeOptions" class="form-select form-select-sm" aria-label="View option"></select>
+                                    </div>
+                                </div>
+                            </div>
+                        </nav>
+                        <!-- end of view options for top comorbidities -->
+                        <!-- ICD related charts -->
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <!-- top comorbidities -->
+                                <div class="card border-info mb-4">
+                                    <h6 class="card-header text-bg-info">Top ICD Codes</h6>
+                                    <div class="card-body">
+                                        <h5 class="card-title text-center fw-bold mb-3" id="topComorbTitle">Top Comorbidities for ICD code</h5>
+                                        <!-- source comorbidities and synth comorbidities -->
+                                        <div class="row mb-4">
+                                            <div class="col-lg-6">
+                                                <div id="donutRelatedIcdSource"></div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div id="donutRelatedIcdSynth"></div>
+                                            </div>
+                                        </div>
+                                        <!-- end of source comorbidities and synth comorbidities -->
+                                        <h5 class="card-title text-center fw-bold mb-3" id="icdAgeDistributionTitle">Age Distribution for ICD code</h5>
+                                        <!-- age distribution -->
+                                        <div class="row">
+                                            <div class="col-lg-12">
+                                                <div id="icdAgeDistributionChart"></div>
+                                            </div>
+                                        </div>
+                                        <!-- end of age distribution -->
+                                    </div>
+                                </div>
+                                <!-- end of top comorbidities -->
+                            </div>
+                        </div>
+                        <!-- end of ICD related charts -->
                     </div>
                     <!-- synthetic data gen status -->
                     <!-- error status -->
