@@ -1,3 +1,6 @@
+if (typeof i2b2 === 'undefined') {
+    i2b2 = {};
+}
 if (typeof i2b2.sythndata === 'undefined') {
     i2b2.sythndata = {};
 }
@@ -28,12 +31,14 @@ i2b2.sythndata.modal.message.show = function (title, message) {
 };
 // progress modals
 i2b2.sythndata.modal.progress = {};
-i2b2.sythndata.modal.progress.show = function (title) {
-    $('#sythndata-progress-modal-title').text(title);
+i2b2.sythndata.modal.progress.show = function () {
     $('#sythndata-progress-modal').modal('show');
 };
 i2b2.sythndata.modal.progress.hide = function () {
     $('#sythndata-progress-modal').modal('hide');
+
+    // reset progress description
+    $('#progressStep').text('');
 };
 // confirm modals
 i2b2.sythndata.modal.confirm = {};
@@ -124,36 +129,41 @@ i2b2.sythndata.event.onclickRun = function () {
     if (taskStatus) {
         if (taskStatus === 'in-progress') {
             i2b2.sythndata.modal.message.show('Generating Data', 'Synthetic data generation is already in progress.');
+
+            return;
         } else if (taskStatus === 'success') {
             if (!i2b2.model.currentTask.fileDownloaded) {
                 const title = 'Previous Result Not Downloaded';
                 const message = '<p>You have not downloaded results of the previous run.</p>'
                         + '<p class="fw-bold">Do you want to continue?</p>';
                 i2b2.sythndata.modal.confirm.show(title, message);
+
+                return;
             }
         }
-    } else {
-        i2b2.sythndata.runQuery();
     }
+
+    i2b2.sythndata.runQuery();
 };
 i2b2.sythndata.event.onclickContinue = function () {
-    const origData = i2b2.model.currentRec.origData;
+    const taskStatus = i2b2.model.currentTask && i2b2.model.currentTask.status;
+    if (taskStatus === 'in-progress') {
+        i2b2.sythndata.modal.message.show('Generating Data', 'Synthetic data generation is already in progress.');
 
-    new Promise((resolve, reject) => {
-        const successHandler = function (data) {
-            resolve(data);
-        };
-        const errorHandler = function (err) {
-            console.error(err);
-            reject(err);
-        };
-        i2b2.sythndata.rest.fetchLastData(origData.PRS_id, successHandler, errorHandler);
-    }).then((data) => {
-        if (data.status === 'NONE') {
-            i2b2.sythndata.modal.message.show('Continue Run Error', 'No previous run found for the patient set.');
-            return;
-        }
-    });
+        return;
+    }
+    if (taskStatus === 'success') {
+        i2b2.sythndata.modal.message.show('Generating Data', 'Last result is already being shown.');
+
+        return;
+    }
+
+    i2b2.sythndata.continueLast();
+};
+i2b2.sythndata.event.onclickDownload = function () {
+    i2b2.model.currentTask.fileDownloaded = true;
+    
+    return true;
 };
 
 // initiate a synthetic dataset processing job.
@@ -174,52 +184,34 @@ i2b2.sythndata.postMessage = function (patient_set_id, sc_value, ttest_value, st
     });
 };
 
-i2b2.sythndata.progressBar = {};
-i2b2.sythndata.progressBar.setValue = function (percentage) {
-    $('#dataGenProgress').attr('aria-valuenow', percentage);
-    if (percentage === 0) {
-        $('#dataGenProgressBar').css('width', 0).text('');
-    } else {
-        $('#dataGenProgressBar').css('width', percentage + '%').text(`${percentage}%`);
-    }
-};
-i2b2.sythndata.progressBar.setValueWithDescription = function (percentage, description) {
-    i2b2.sythndata.progressBar.setValue(percentage);
-    $('#progressStep').text(description);
-};
-i2b2.sythndata.progressBar.reset = function () {
-    setTimeout(() => {
-        i2b2.sythndata.progressBar.setValueWithDescription(0, '');
-    }, 500);
-};
-
 i2b2.sythndata.view = {};
-i2b2.sythndata.view.showProgressStatus = function () {
-    $('#progressStatus').show();
-    $('#demographicStatus').hide();
-    $('#synthDataGenStatus').hide();
-    $('#errorStatus').hide();
+i2b2.sythndata.view.setFocusResultTab = function () {
+    i2b2.sythndata.tab.enable('#nav-results-tab');
+    i2b2.sythndata.tab.setFocus('#nav-results-tab');
 };
 i2b2.sythndata.view.showDemographicStatus = function () {
-    $('#progressStatus').hide();
     $('#demographicStatus').show();
     $('#synthDataGenStatus').hide();
     $('#errorStatus').hide();
+
+    i2b2.sythndata.view.setFocusResultTab();
 };
 i2b2.sythndata.view.showSynthDataGenStatus = function () {
-    $('#progressStatus').hide();
     $('#demographicStatus').hide();
     $('#synthDataGenStatus').show();
     $('#errorStatus').hide();
+
+    i2b2.sythndata.view.setFocusResultTab();
 };
 i2b2.sythndata.view.showErrorStatus = function (title, message) {
     $('#errorTitle').text(title);
     $('#errorMessage').text(message);
 
-    $('#progressStatus').hide();
     $('#demographicStatus').hide();
     $('#synthDataGenStatus').hide();
     $('#errorStatus').show();
+
+    i2b2.sythndata.view.setFocusResultTab();
 };
 
 i2b2.sythndata.table = {};
@@ -401,17 +393,6 @@ i2b2.sythndata.successSyntheticDataGeneration = function (results) {
     });
 };
 
-// update progress bar in UI.
-i2b2.sythndata.updateProgress = function (progress) {
-    const meta_value = progress.current_step;
-    const meta_total = progress.total_steps;
-    const meta_progress = (meta_value / meta_total) * 100;
-    const meta_text = progress.step_description;
-
-    // update progress bar value from progress data
-    i2b2.sythndata.progressBar.setValueWithDescription(meta_progress, meta_text);
-};
-
 i2b2.sythndata.checkStatus = function (taskURL) {
     return new Promise((resolve, reject) => {
         const sendRequest = function () {
@@ -421,9 +402,6 @@ i2b2.sythndata.checkStatus = function (taskURL) {
                 } else if (data.state === 'FAILURE') {
                     reject(data);
                 } else {
-//                    if (data.state === 'PROGRESS') {
-//                        i2b2.sythndata.updateProgress(data.meta);
-//                    }
                     setTimeout(sendRequest, 5000);
                 }
             };
@@ -447,8 +425,6 @@ i2b2.sythndata.progressSyntheticDataGeneration = function (taskURL, inprogress) 
         setId: origData.PRS_id
     };
 
-    i2b2.sythndata.progressBar.reset();
-
     const msg = inprogress ? "Retrieving in-progress process on server" : "Initializing processing on server";
     $('#progressStep').text(msg);
 
@@ -457,13 +433,17 @@ i2b2.sythndata.progressSyntheticDataGeneration = function (taskURL, inprogress) 
         i2b2.model.currentTask.status = "success";
         const results = JSON.parse(data.results);
         i2b2.sythndata.successSyntheticDataGeneration(results);
-        i2b2.sythndata.progressBar.reset();
-        i2b2.sythndata.view.showSynthDataGenStatus();
+        setTimeout(() => {
+            i2b2.sythndata.modal.progress.hide();
+            i2b2.sythndata.view.showSynthDataGenStatus();
+        }, 1000);
     }, (errorMessage) => {
         i2b2.model.currentTask.status = "failure";
 
-        i2b2.sythndata.progressBar.reset();
-        i2b2.sythndata.view.showErrorStatus('Data Generation Failed', 'Unable to generate synthetic data.');
+        setTimeout(() => {
+            i2b2.sythndata.modal.progress.hide();
+            i2b2.sythndata.view.showErrorStatus('Generate Synthetic Data Failed', 'Unable to generate synthetic data.');
+        }, 1000);
 
         console.log(errorMessage);
     });
@@ -477,24 +457,12 @@ i2b2.sythndata.runSyntheticDataGeneration = function () {
 
         i2b2.sythndata.progressSyntheticDataGeneration(taskURL, inprogress);
     }).catch((error) => {
-        alert("Error: Internal Server Error")
+        setTimeout(() => {
+            i2b2.sythndata.modal.progress.hide();
+            i2b2.sythndata.view.showErrorStatus('Generate Synthetic Data Failed', 'Error: Internal server error.');
+        }, 1000);
         console.log(error);
     });
-};
-
-i2b2.sythndata.runDemogProgress = async function () {
-    let percentage = 0;
-    for (let i = 0; i < 15; i++) {
-        // Takes abouot 7 seconds
-        if (percentage < 75) {
-            percentage += 13;
-        } else {
-            percentage += (100 - percentage) / 2;
-        }
-
-        i2b2.sythndata.progressBar.setValue(percentage);
-        await new Promise(r => setTimeout(r, 1000));
-    }
 };
 
 i2b2.sythndata.getDemographicData = function (patientSetId, sc_value, ttest_value) {
@@ -579,7 +547,68 @@ i2b2.sythndata.showDemographicInfo = function (demographicData) {
     }
 
     i2b2.sythndata.view.showDemographicStatus();
-    i2b2.sythndata.tab.enable('#nav-data-tab');
+};
+
+i2b2.sythndata.getLast = function (patient_set_id) {
+    return new Promise((resolve, reject) => {
+        const successHandler = function (data) {
+            resolve(data);
+        };
+        const errorHandler = function (err) {
+            console.error(err);
+            reject(err);
+        };
+        i2b2.sythndata.rest.fetchLastData(patient_set_id, successHandler, errorHandler);
+    });
+};
+
+i2b2.sythndata.continueSyntheticDataGeneration = function () {
+    const origData = i2b2.model.currentRec.origData;
+
+    i2b2.sythndata.modal.progress.show();
+    i2b2.sythndata.getLast(origData.PRS_id).then(data => {
+        if (data.status === 'NONE') {
+            setTimeout(() => {
+                i2b2.sythndata.modal.progress.hide();
+                i2b2.sythndata.view.showErrorStatus('Continue Generate Synthetic Data Failed', 'No previous run found for the patient set.');
+            }, 1000);
+        } else if (data.status === 'PROGRESS') {
+            const taskURL = data.location;
+            i2b2.sythndata.progressSyntheticDataGeneration(taskURL, true);
+        } else {
+            i2b2.model.currentTask = {
+                status: "success",
+                setId: origData.PRS_id
+            };
+            i2b2.sythndata.successSyntheticDataGeneration(data.result);
+            setTimeout(() => {
+                i2b2.sythndata.modal.progress.hide();
+                i2b2.sythndata.view.showSynthDataGenStatus();
+            }, 1000);
+        }
+    }).catch((error) => {
+        setTimeout(() => {
+            i2b2.sythndata.modal.progress.hide();
+            i2b2.sythndata.view.showErrorStatus('Continue Generate Synthetic Data Failed', 'Could not retrieve previous runs from server.');
+        }, 1000);
+
+        console.log(error);
+    });
+};
+i2b2.sythndata.continueLast = function () {
+    if (i2b2.model.currentRec) {
+        if (i2b2.model.currentRec.origData) {
+            if (i2b2.model.currentRec.origData.PRS_id) {
+                i2b2.sythndata.continueSyntheticDataGeneration();
+            } else {
+                i2b2.sythndata.view.showErrorStatus('Continue Generate Synthetic Data Failed', 'No PRS identifier found on entry.');
+            }
+        } else {
+            i2b2.sythndata.view.showErrorStatus('Continue Generate Synthetic Data Failed', 'No original data found on entry.');
+        }
+    } else {
+        i2b2.sythndata.view.showErrorStatus('Continue Generate Synthetic Data Failed', 'Please select a query.');
+    }
 };
 
 i2b2.sythndata.runQuery = function () {
@@ -609,15 +638,8 @@ i2b2.sythndata.runQuery = function () {
     origData.ttest_value = ttest_value ? ttest_value : null;
     origData.st_test_value = st_test_value ? st_test_value : null;
 
-    // switch to the view-result tab
-    i2b2.sythndata.tab.disable('#nav-data-tab');
-    i2b2.sythndata.tab.enable('#nav-results-tab');
-    i2b2.sythndata.tab.setFocus('#nav-results-tab');
-
-    i2b2.sythndata.view.showProgressStatus();
+    i2b2.sythndata.modal.progress.show();
     if (origData.sc_value || origData.ttest_value) {
-        i2b2.sythndata.runDemogProgress();
-
         // post and await response for URL.
         i2b2.model.currentTask = {
             status: "in-progress",
@@ -625,17 +647,21 @@ i2b2.sythndata.runQuery = function () {
         };
         i2b2.sythndata.getDemographicData(patientSetId, origData.sc_value, origData.ttest_value).then(demographicData => {
             i2b2.model.currentTask = null;
-            i2b2.sythndata.showDemographicInfo(demographicData);
+            setTimeout(() => {
+                i2b2.sythndata.modal.progress.hide();
+                i2b2.sythndata.showDemographicInfo(demographicData);
+            }, 1000);
         }).catch((error) => {
             i2b2.model.currentTask = null;
-            i2b2.sythndata.view.showErrorStatus('Get Demographic Stats Failed', 'Error: Internal server error.');
+            setTimeout(() => {
+                i2b2.sythndata.modal.progress.hide();
+                i2b2.sythndata.view.showErrorStatus('Get Demographic Stats Failed', 'Error: Internal server error.');
+            }, 1000);
             console.log(error);
         });
     } else {
         i2b2.sythndata.runSyntheticDataGeneration();
     }
-
-    i2b2.sythndata.tab.enable('#nav-data-tab');
 };
 
 i2b2.sythndata.createRadioButton = function (radioName, label, value, id, checked) {
@@ -722,5 +748,6 @@ window.addEventListener("I2B2_READY", () => {
 
         $('#runQuery').click(i2b2.sythndata.event.onclickRun);
         $('#continueLast').click(i2b2.sythndata.event.onclickContinue);
+        $('#downloadSynthData').click(i2b2.sythndata.event.onclickDownload);
     });
 });

@@ -9,6 +9,11 @@
         <link rel="stylesheet" href="assets/c3code/c3.css" />
         <link rel="stylesheet" href="css/sythndata-main.css" />
         <script src="js/i2b2-loader.js"></script>
+        <script src="assets/jquery/jquery-3.6.3.min.js"></script>
+        <script src="assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <script src="assets/d3code/d3.v3.js"></script>
+        <script src="assets/c3code/c3.js"></script>
+        <script src="js/sythndata-charts.js"></script>
         <script src="js/sythndata-main.js"></script>
     </head>
     <body>
@@ -84,36 +89,20 @@
                     </div>
                 </div>
                 <div class="tab-pane fade" id="nav-results" role="tabpanel" aria-labelledby="nav-results-tab">
-                    <!-- progress status -->
-                    <div class="row" id="progressStatus" style="display: none;">
-                        <div class="col-md-12">
-                            <h6>Please wait while the Synthetic Data Server creates your dataset.</h6>
-                            <div class="progress" id="dataGenProgress" role="progressbar" aria-label="Generate data progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="height: 30px;">
-                                <div class="progress-bar bg-primary fw-bold fs-6" id="dataGenProgressBar" style="width: 0%"></div>
-                            </div>
-                            <div id="progressStep"></div>
-                        </div>
-                    </div>
-                    <!-- end of progress status -->
                     <!-- demographic status -->
                     <div class="row" id="demographicStatus" style="display: none;">
                         <div class="col-md-12">
                             <h6>Stats about the source data of this query:</h6>
-                            <div class="card">
-                                <div class="card-header text-center">
+                            <div class="card border-primary" style="min-width: 46em;">
+                                <div class="card-header text-bg-primary text-center">
                                     <h5 class="m-0" id="patientCounts">N(patients) size = {counts}</h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-sm-6 pe-4" id="stat-test" style="display: none;">
-                                            <h6 class="card-title fw-bold mb-2">Statistical Test</h6>
-                                            <div id="stat-test-plot"></div>
-                                        </div>
-                                        <div class="col-sm-6 ps-4" id="stat-compare" style="display: none;">
-                                            <h6 class="card-title fw-bold mb-2">Static Comparison Elements</h6>
-                                            <div id="stat-compare-checks"></div>
-                                        </div>
-                                    </div>
+                                    <h6 class="card-title fw-bold mb-3">Statistical Test</h6>
+                                    <div id="stat-test-plot"></div>
+
+                                    <h6 class="card-title fw-bold mt-4 mb-3">Static Comparison Elements</h6>
+                                    <div id="stat-compare-checks"></div>                                    
                                 </div>
                                 <div class="card-footer text-center">
                                     <div class="mb-2" id="synth-actions">
@@ -431,17 +420,17 @@
         <!-- end of message modal -->
         <!-- progress modal -->
         <div class="modal fade" id="sythndata-progress-modal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="sythndata-progress-modal-title" aria-hidden="true">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h6 class="modal-title" id="sythndata-progress-modal-title">Progress</h6>
+                        <h6 class="modal-title" id="sythndata-progress-modal-title">Synthdata Progress</h6>
                     </div>
                     <div class="modal-body">
-                        <div class="text-center">
-                            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
+                        <h6>Please wait while the Synthetic Data Server creates your dataset.</h6>
+                        <div class="progress" role="progressbar" aria-label="Generate data progress" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="height: 20px">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
                         </div>
+                        <div id="progressStep"></div>
                     </div>
                 </div>
             </div>
@@ -463,10 +452,5 @@
             </div>
         </div>
         <!-- end of confirm modal -->
-        <script src="assets/jquery/jquery-3.6.3.min.js"></script>
-        <script src="assets/bootstrap/js/bootstrap.bundle.min.js"></script>
-        <script src="assets/d3code/d3.v3.js"></script>
-        <script src="assets/c3code/c3.js"></script>
-        <script src="js/sythndata-charts.js"></script>
     </body>
 </html>
