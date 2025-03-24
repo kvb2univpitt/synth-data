@@ -1,0 +1,62 @@
+services:
+  i2b2-data-demo:
+    image: kvb2univpitt/i2b2-data-demo-postgresql:v1.8.1a.2025.03-dev
+    container_name: i2b2-data-demo
+    networks:
+      - i2b2-demo-net
+    ports:
+      - "5432:5432"
+  synth-worker:
+    image: kvb2univpitt/synth-worker
+    container_name: synth-worker
+    env_file:
+      - .env
+    networks:
+      - i2b2-demo-net
+    depends_on:
+      - synth-redis
+    volumes:
+      - /home/kvb2/devel/github/project/local/upitt/synthdata/out:/app/output
+    ports:
+      - "3005:80"
+
+  # reuse synth container but run other command
+  celery-worker:
+    image: kvb2univpitt/celery-worker
+    container_name: celery-worker
+    env_file:
+      - .env
+    networks:
+      - i2b2-demo-net
+    command: [celery, --app=celery_task, worker, --loglevel=INFO]
+    volumes:
+      - /home/kvb2/devel/github/project/local/upitt/synthdata/out:/app/output
+    depends_on:
+      - synth-redis
+      - synth-worker
+
+  synth-redis:
+    image: redis:7.0.4-alpine
+    container_name: synth-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - /home/kvb2/devel/github/project/local/upitt/synthdata/data:/data
+    command: redis-server
+    networks:
+      - i2b2-demo-net
+
+networks:
+  i2b2-demo-net:
+    name: i2b2-demo-net
+    driver: bridge
+    external: true
+
+volumes:
+  synth-vol:
+    name: synth-vol
+    external: false
+  output-vol:
+    name: output-vol
+    external: false
