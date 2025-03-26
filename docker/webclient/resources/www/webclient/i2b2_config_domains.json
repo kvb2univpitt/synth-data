@@ -1,0 +1,14 @@
+{
+    "urlProxy": "proxy.php",
+    "urlFramework": "js-i2b2/",
+    "lstDomains": [
+        {
+            "domain": "i2b2demo",
+            "name": "i2b2 Local Demo",
+            "urlCellPM": "http://i2b2-core-server-demo:9090/i2b2/services/PMService/",
+            "allowAnalysis": true,
+            "debug": true
+        }
+    ],
+    "loginTimeout": 5
+}

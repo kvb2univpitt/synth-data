@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>The Synthetic Data Generator (SDG) Plugin</title>
+        <link rel="stylesheet"  href="assets/bootstrap/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="assets/bootstrap-icons/bootstrap-icons.min.css" />
+        <link rel="stylesheet" href="assets/c3code/c3.css" />
+        <link rel="stylesheet" href="css/sythndata-main.css" />
+        <script src="js/i2b2-loader.js"></script>
+        <script src="assets/jquery/jquery-3.6.3.min.js"></script>
+        <script src="assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <script src="assets/d3code/d3.v3.js"></script>
+        <script src="assets/c3code/c3.js"></script>
+        <script src="js/sythndata-charts.js"></script>
+        <script src="js/sythndata-main.js"></script>
+    </head>
+    <body>
+        <div class="py-4 px-4">
+            <!-- tabs -->
+            <ul class="nav nav-tabs mb-4" id="nav-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="nav-data-tab" data-bs-toggle="tab" data-bs-target="#nav-data" type="button" role="tab"  aria-controls="nav-data" aria-selected="true">Specify Data</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link disabled" id="nav-results-tab" data-bs-toggle="tab" data-bs-target="#nav-results" type="button" role="tab" aria-controls="nav-results" aria-selected="false">View Results</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="nav-help-tab" data-bs-toggle="tab" data-bs-target="#nav-help" type="button" role="tab" aria-controls="nav-help" aria-selected="false">Plugin Help</button>
+                </li>
+            </ul>
+            <!-- end of tabs -->
+            <!-- tab contents -->
+            <div class="tab-content" id="nav-tab-content">
+                <div class="tab-pane fade show active" id="nav-data" role="tabpanel" aria-labelledby="nav-data-tab">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="border-bottom">
+                                <p>Drop a patient set onto the approriate input boxes below, then click the "Output Options" tab to specify layout of the resulting data, before clicking on the "View Results" tab to retrieve the synthetic patient set.</p>
+                                <p>For more information, refer to the "Plugin Help" tab.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-8">
+                            <form>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="mb-3 p-3 bg-light">
+                                            <label class="form-label">Patient Set:</label>
+                                            <div class="input-group">
+                                                <div class="form-control droptrgt p-2 text-bg-light" id="sythndata-psmaindiv">
+                                                    <div id="psmaindiv-content">Drop a patient set here.</div>
+                                                </div>
+                                                <button class="btn btn-success" id="runQuery" type="button" disabled="disabled">&nbsp;&nbsp;&nbsp;Run&nbsp;&nbsp;&nbsp;</button>
+                                                <button class="btn btn-primary" id="continueLast" type="button" disabled="disabled">Continue</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-4">
+                                        <div class="mb-3 p-3 bg-light">
+                                            <div class="mb-3">
+                                                <label for="statTest" class="form-label fw-bold">Statistical Test Selector:</label>
+                                                <select class="form-select" id="statTest" name="statTest" aria-label="Statistical test" >
+                                                    <option value="t-test">T-Test</option>
+                                                    <option value="chi-squared">Chi-Squared Test</option>
+                                                    <option value="ks-test">Ks Test</option>
+                                                    <option value="anova-test">ANOVA Test</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" id="statTestAge" type="checkbox" name="statTestAge" value="age" />
+                                                <label class="form-check-label mt-1" for="statTestAge">Age</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="p-3 bg-light">
+                                            <label class="form-label fw-bold">Static Comparison:</label>
+                                            <div id="staticCompCheck"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="nav-results" role="tabpanel" aria-labelledby="nav-results-tab">
+                    <!-- demographic status -->
+                    <div class="row" id="demographicStatus" style="display: none;">
+                        <div class="col-md-12">
+                            <h6>Stats about the source data of this query:</h6>
+                            <div class="card border-primary" style="min-width: 46em;">
+                                <div class="card-header text-bg-primary text-center">
+                                    <h5 class="m-0" id="patientCounts">N(patients) size = {counts}</h5>
+                                </div>
+                                <div class="card-body">
+                                    <h6 class="card-title fw-bold mb-3">Statistical Test</h6>
+                                    <div id="stat-test-plot"></div>
+
+                                    <h6 class="card-title fw-bold mt-4 mb-3">Static Comparison Elements</h6>
+                                    <div id="stat-compare-checks"></div>                                    
+                                </div>
+                                <div class="card-footer text-center">
+                                    <div class="mb-2" id="synth-actions">
+                                        <button class="btn btn-success me-2" id="startSynth">Synthesize</button>
+                                        <button class="btn btn-secondary" id="cancelSynth">Cancel</button>
+                                    </div>
+                                    All n sizes must be at least 100 to synthesize.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- end of demographic status -->
+                    <!-- synthetic data gen status -->
+                    <div id="synthDataGenStatus">
+                        <nav class="navbar bg-body-secondary mb-4">
+                            <div class="container-fluid">
+                                <span class="navbar-brand">Synthetic Data Generation Results</span>
+                                <a class="btn btn-success" id="downloadSynthData" href=""><i class="bi bi-file-arrow-down"></i> Download Synthetic Data Tables</a>
+                            </div>
+                        </nav>
+                        <!-- data generation summary -->
+                        <div class="row">
+                            <div class="col">
+                                <!-- result summary -->
+                                <div class="card border-success mb-3" style="width: 28em; min-width: 28em;">
+                                    <h6 class="card-header text-bg-success">Result Summary</h6>
+                                    <div class="card-body">
+                                        <table class="table table-sm table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col"></th>
+                                                    <th scope="col">Source</th>
+                                                    <th scope="col">Synthetic</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="table-group-divider">
+                                                <tr>
+                                                    <th scope="row">Total Records:</th>
+                                                    <td id="totalSourceRecords"></td>
+                                                    <td id="totalSyntheticRecords"></td>
+                                                </tr>
+                                                <tr>
+                                                    <th scope="row">Total Diagnoses:</th>
+                                                    <td id="sourceCodesTotals"></td>
+                                                    <td id="syntheticCodesTotals"></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <!-- end of result summary -->
+                                <!-- t-test -->
+                                <div class="card border-success mb-4" id="tTestView" style="width: 28em; min-width: 28em;">
+                                    <h6 class="card-header text-bg-success">T-Test</h6>
+                                    <div class="card-body">
+                                        <p>
+                                            <span class="fw-bold" id="stTestValue">test value</span>:&nbsp;<span id="tTestResultField"></span><span class="fw-bold ms-4">p-value: </span><span id="pValue"></span>
+                                        </p>
+                                        <table class="table table-sm table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col"></th>
+                                                    <th scope="col">Source</th>
+                                                    <th scope="col">Synthetic</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="table-group-divider">
+                                                <tr>
+                                                    <th scope="row">Mean</th>
+                                                    <td id="meanSource"></td>
+                                                    <td id="meanSynth"></td>
+                                                </tr>
+                                                <tr>
+                                                    <th scope="row">First Quartile</th>
+                                                    <td id="firstQuartSource"></td>
+                                                    <td id="firstQuartSynth"></td>
+                                                </tr>
+                                                <tr>
+                                                    <th scope="row">Median</th>
+                                                    <td id="medianSource"></td>
+                                                    <td id="medianSynth"></td>
+                                                </tr>
+                                                <tr>
+                                                    <th scope="row">Third Quartile</th>
+                                                    <td id="thirdQuartSource"></td>
+                                                    <td id="thirdQuartSynth"></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <!-- end of t-test -->
+                            </div>
+                            <div class="col">
+                                <!-- "age" -->
+                                <div class="card border-success mb-4" style="max-width: 46em; min-width: 46em;">
+                                    <h6 class="card-header text-bg-success">Age</h6>
+                                    <div class="card-body text-center">
+                                        <div class="mb-3" id="ageBoxAndWhiskerPlotSource"></div>
+                                        <div id="ageBoxAndWhiskerPlotSynth"></div>
+                                    </div>
+                                </div>
+                                <!-- end of "age" -->
+                            </div>
+                        </div>
+                        <!-- end of data generation summary -->
+                        <!-- view options for comparison charts -->
+                        <nav class="navbar bg-body-secondary mb-4">
+                            <div class="container-fluid">
+                                <div class="navbar-brand">Comparison Charts</div>
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-auto">
+                                        <label for="compViewOptions" class="form-label mt-2 fs-6">Select View Option:</label>
+                                    </div>
+                                    <div class="col-auto">
+                                        <select id="compViewOptions" class="form-select form-select-sm" aria-label="View option">
+                                            <option value="Percentage" selected>Percentage</option>
+                                            <option value="Count">Count</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </nav>
+                        <!-- end of view options for comparison charts -->
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <!-- "age range & gender" -->
+                                <div class="card border-primary mb-4" style="max-width: 52em; min-width: 52em;">
+                                    <h6 class="card-header text-bg-primary">Age Range & Gender</h6>
+                                    <div class="card-body">
+                                        <div id="pyramidCombined"></div>
+                                    </div>
+                                </div>
+                                <!-- end of  "age range & gender" -->
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <!-- race -->
+                                <div class="card border-primary mb-4" style="max-width: 37em; min-width: 37em;">
+                                    <h6 class="card-header text-bg-primary">Race</h6>
+                                    <div class="card-body">
+                                        <div id="raceCompChart"></div>
+                                    </div>
+                                </div>
+                                <!-- end of race -->
+                            </div>
+                            <div class="col-lg-6">
+                                <!-- ethnicity -->
+                                <div class="card border-primary mb-4" style="max-width: 37em; min-width: 37em;">
+                                    <h6 class="card-header text-bg-primary">Ethnicity HISP</h6>
+                                    <div class="card-body">
+                                        <div id="ethnicityCompChart"></div>
+                                    </div>
+                                </div>
+                                <!-- end of ethnicity -->
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <!-- zip codes -->
+                                <div class="card border-primary mb-4" style="max-width: 37em; min-width: 37em;">
+                                    <h6 class="card-header text-bg-primary">Zip Codes</h6>
+                                    <div class="card-body">
+                                        <div id="zipCodesCompChart"></div>
+                                    </div>
+                                </div>
+                                <!-- end of zip codes -->
+                            </div>
+                            <div class="col-lg-6">
+                                <!-- top ICD codes -->
+                                <div class="card border-primary mb-4" style="max-width: 37em; min-width: 37em;">
+                                    <h6 class="card-header text-bg-primary">Top ICD Codes</h6>
+                                    <div class="card-body">
+                                        <div id="topICDCodesCompChart"></div>
+                                    </div>
+                                </div>
+                                <!-- end of top ICD codes -->
+                            </div>
+                        </div>
+                        <!-- view options for top comorbidities -->
+                        <nav class="navbar bg-body-secondary mb-4">
+                            <div class="container-fluid">
+                                <div class="navbar-brand">Top Comorbidities</div>
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-auto">
+                                        <label for="compViewOptions" class="form-label mt-2 fs-6">Choose an ICD code:</label>
+                                    </div>
+                                    <div class="col-auto">
+                                        <select id="icdCodeOptions" class="form-select form-select-sm" aria-label="View option"></select>
+                                    </div>
+                                </div>
+                            </div>
+                        </nav>
+                        <!-- end of view options for top comorbidities -->
+                        <!-- ICD related charts -->
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <!-- top comorbidities -->
+                                <div class="card border-info mb-4">
+                                    <h6 class="card-header text-bg-info">Top ICD Codes</h6>
+                                    <div class="card-body">
+                                        <h5 class="card-title text-center fw-bold mb-3" id="topComorbTitle">Top Comorbidities for ICD code</h5>
+                                        <!-- source comorbidities and synth comorbidities -->
+                                        <div class="row mb-4">
+                                            <div class="col-lg-6">
+                                                <div id="donutRelatedIcdSource"></div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div id="donutRelatedIcdSynth"></div>
+                                            </div>
+                                        </div>
+                                        <!-- end of source comorbidities and synth comorbidities -->
+                                        <h5 class="card-title text-center fw-bold mb-3" id="icdAgeDistributionTitle">Age Distribution for ICD code</h5>
+                                        <!-- age distribution -->
+                                        <div class="row">
+                                            <div class="col-lg-12">
+                                                <div id="icdAgeDistributionChart"></div>
+                                            </div>
+                                        </div>
+                                        <!-- end of age distribution -->
+                                    </div>
+                                </div>
+                                <!-- end of top comorbidities -->
+                            </div>
+                        </div>
+                        <!-- end of ICD related charts -->
+                    </div>
+                    <!-- synthetic data gen status -->
+                    <!-- error status -->
+                    <div class="row" id="errorStatus">
+                        <div class="col-md-6 mx-auto">
+                            <div class="card border-danger mb-4">
+                                <h6 class="card-header text-bg-danger"><i class="bi bi-exclamation-triangle-fill"></i> <span id="errorTitle">Error Title</span></h6>
+                                <div class="card-body">
+                                    <h6 class="card-title" id="errorMessage">Error message.</h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- end of error status -->
+                </div>
+                <div class="tab-pane fade" id="nav-help" role="tabpanel" aria-labelledby="nav-help-tab">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h5 class="border-bottom">Introduction</h5>
+                            This plugin provides the following functions:
+                            <ul class="help-list">
+                                <li>Generates synthetic data that is statistically similar to the data for the selected patient set.</li>
+                                <li>Continuation or recovery of the results for long running data generations after log outs or timeouts.</li>
+                                <li>Statistical demographics information for the selected patient set.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h5 class="border-bottom">Instructions</h5>
+                            <ol class="help-list">
+                                <li>
+                                    Running the data generation:
+                                    <ul class="list-unstyled">
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Navigate to the "Specify Data" tab.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Drag and drop a Patient Set.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Make sure none of the check-boxes are selected.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Click on the "Run" button or switch to the "View Results" tab.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Data generation will start and progress will be shown in teh "View Results" tab.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> When data generation is complete, the "View Results" tab will show some statistical information about the data and a link for you to be able to download the data.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> For large number of patients the generation can be long running. Please see next item to see how you can recover the run or results.</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    Recovering the data generation after the application is closed or timed out:
+                                    <ul class="list-unstyled">
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Navigate to the "Specify Data" tab.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Drag and drop a Patient Set for which you started the generation in a previous session.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Click on the "Continue" button.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> You will switch to the "View Results" tab and will be either shown the progress or the results.</li>
+                                    </ul>
+                                </li>
+                                <li>
+                                    Showing statistical demographics information: 
+                                    <ul class="list-unstyled">
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Navigate to the "Specify Data" tab.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Drag and drop a Patient Set.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Select demographics information configuration using the check boxes in the "Statistical Test Selector" and/or the "Static Comparison".</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Click on the "Run " button or switch to the "View Results" tab.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Information generation will start and progress will be shown in the "View Results" tab.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> When information generation is complete the "View Results" tab will show the information.</li>
+                                        <li><i class="bi bi-arrow-right-circle-fill text-primary"></i> Click on the "Synthesize " button to start data generation directly from the information display.</li>
+                                    </ul>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end of tab contents -->
+        </div>
+        <!-- end of page padding -->
+        <!-- message modal -->
+        <div class="modal fade" id="sythndata-message-modal" tabindex="-1" aria-labelledby="sythndata-message-modal-title" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h6 class="modal-title" id="sythndata-message-modal-title">Message Title</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="sythndata-message-modal-message">Message</div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end of message modal -->
+        <!-- progress modal -->
+        <div class="modal fade" id="sythndata-progress-modal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="sythndata-progress-modal-title" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h6 class="modal-title" id="sythndata-progress-modal-title">Synthdata Progress</h6>
+                    </div>
+                    <div class="modal-body">
+                        <h6>Please wait while the Synthetic Data Server creates your dataset.</h6>
+                        <div class="progress" role="progressbar" aria-label="Generate data progress" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="height: 20px">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
+                        </div>
+                        <div id="progressStep"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end of progress modal -->
+        <!-- confirm modal -->
+        <div class="modal fade" id="sythndata-confirm-modal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="sythndata-confirm-modal-title" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h6 class="modal-title" id="sythndata-confirm-modal-title">Confirm</h6>
+                    </div>
+                    <div class="modal-body" id="sythndata-confirm-modal-message">Message</div>
+                    <div class="modal-footer">
+                        <button id="modal-btn-no" type="button" class="btn btn-success" data-bs-dismiss="modal">No</button>
+                        <button id="modal-btn-yes" type="button" class="btn btn-danger" data-bs-dismiss="modal" onclick="i2b2.sythndata.runQuery();">Yes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end of confirm modal -->
+    </body>
+</html>

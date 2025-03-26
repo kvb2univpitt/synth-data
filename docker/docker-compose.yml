@@ -15,6 +15,15 @@ services:
       - i2b2-data-demo
     ports:
       - 9090:9090
+  i2b2-webclient-demo:
+    image: kvb2univpitt/i2b2-webclient-demo-synthdata:v1.8.1a.2025.03
+    container_name: i2b2-webclient-demo
+    networks:
+      - i2b2-demo-net
+    depends_on:
+      - i2b2-core-server-demo
+    ports:
+      - 80:80
   synth-worker:
     image: kvb2univpitt/synth-worker
     container_name: synth-worker

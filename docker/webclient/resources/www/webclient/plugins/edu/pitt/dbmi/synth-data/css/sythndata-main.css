@@ -1,0 +1,56 @@
+body, td, p {
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+}
+
+.nav-tabs {
+    --bs-nav-tabs-border-width: 3px;
+    --bs-nav-tabs-border-color: #e18a07;
+    --bs-nav-tabs-link-hover-border-color: #e9ecef #e9ecef #e18a07;
+    --bs-nav-tabs-link-active-border-color: #e18a07 #e18a07 #fff;
+}
+
+.help-list li {
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+}
+
+div.droptrgt {
+    text-align:center;
+    border: 1px solid #63758C;
+    width: 100%;
+    overflow: hidden;
+    background-color: #fff;
+}
+
+.c3-xgrid-line.gridSource line {
+    stroke-dasharray: 3 3;
+    stroke: lightblue;
+}
+.c3-xgrid-line.gridSynth line {
+    stroke-dasharray: 3 3;
+    stroke: rgb(244, 194, 102);
+}
+.c3-xgrid-line.gridQSource line {
+    stroke-dasharray: 2 10;
+    stroke: lightblue;
+}
+.c3-xgrid-line.gridQSynth line {
+    stroke-dasharray: 2 10;
+    stroke: rgb(244, 194, 102);
+}
+.c3-axis-x-label {
+    font-size: medium;
+}
+.c3-grid text {
+    font-size: small;
+}
+.c3-grid.gridBW text {
+    fill: #000;
+}
+.c3-xgrid-line.gridBW line {
+    stroke-dasharray: 2 10;
+    stroke: rgb(23, 23, 23);
+}
