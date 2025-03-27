@@ -31,8 +31,10 @@ Open up a web browser and go to the URL [http://localhost/webclient/](http://loc
 To stop the Docker containers, type the following:
 
 ```
-docker compose down
+docker compose down -v
 ```
+
+> It is important to use -v flag remove all volumes.  If the -v flag is omitted, only the containers and networks will be removed, and the volumes will persist.
 
 ### Generate Synthic Dataset
 

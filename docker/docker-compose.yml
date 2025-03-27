@@ -34,7 +34,7 @@ services:
     depends_on:
       - synth-redis
     volumes:
-      - /home/kvb2/devel/github/project/local/upitt/synthdata/out:/app/output
+      - output-vol:/app/output
     ports:
       - "3005:80"
 
@@ -48,7 +48,7 @@ services:
       - synthdata-demo-net
     command: [celery, --app=celery_task, worker, --loglevel=INFO]
     volumes:
-      - /home/kvb2/devel/github/project/local/upitt/synthdata/out:/app/output
+      - output-vol:/app/output
     depends_on:
       - synth-redis
       - synth-worker
@@ -60,7 +60,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - /home/kvb2/devel/github/project/local/upitt/synthdata/data:/data
+      - synth-vol:/data
     command: redis-server
     networks:
       - synthdata-demo-net
