@@ -3,14 +3,14 @@ services:
     image: kvb2univpitt/i2b2-data-demo-postgresql:v1.8.1a.2025.03-dev
     container_name: i2b2-data-demo
     networks:
-      - i2b2-demo-net
+      - synthdata-demo-net
     ports:
       - "5432:5432"
   i2b2-core-server-demo:
     image: kvb2univpitt/i2b2-core-server-demo-postgresql:v1.8.1.2024.06
     container_name: i2b2-core-server-demo
     networks:
-      - i2b2-demo-net
+      - synthdata-demo-net
     depends_on:
       - i2b2-data-demo
     ports:
@@ -19,7 +19,7 @@ services:
     image: kvb2univpitt/i2b2-webclient-demo-synthdata:v1.8.1a.2025.03
     container_name: i2b2-webclient-demo
     networks:
-      - i2b2-demo-net
+      - synthdata-demo-net
     depends_on:
       - i2b2-core-server-demo
     ports:
@@ -30,7 +30,7 @@ services:
     env_file:
       - .env
     networks:
-      - i2b2-demo-net
+      - synthdata-demo-net
     depends_on:
       - synth-redis
     volumes:
@@ -45,7 +45,7 @@ services:
     env_file:
       - .env
     networks:
-      - i2b2-demo-net
+      - synthdata-demo-net
     command: [celery, --app=celery_task, worker, --loglevel=INFO]
     volumes:
       - /home/kvb2/devel/github/project/local/upitt/synthdata/out:/app/output
@@ -63,13 +63,13 @@ services:
       - /home/kvb2/devel/github/project/local/upitt/synthdata/data:/data
     command: redis-server
     networks:
-      - i2b2-demo-net
+      - synthdata-demo-net
 
 networks:
-  i2b2-demo-net:
-    name: i2b2-demo-net
+  synthdata-demo-net:
+    name: synthdata-demo-net
     driver: bridge
-    external: true
+    external: false
 
 volumes:
   synth-vol:
