@@ -62,4 +62,28 @@ We first need to create a patient set.  Let's create a patient set with the term
 
 1. Click on the ***Analysis Tools*** link and select the sythdata plugin by clicking on the ***The Synthetic Data Generate***.
 
-![Select Synthdata Plugin](img/select_synthdata_plugin.png)
+    ![Select Synthdata Plugin](img/select_synthdata_plugin.png)
+
+2. Select the patient set that you just created from the ***Queries*** panel on the bottom right of the web client:
+
+    ![Select Patient Set](img/drag_patient_set.png)
+
+3. Click and drag it over to the ***Patient Set*** box of the synthdata plugin:
+
+    ![Drop Patient Set](img/drop_patient_set.png)
+
+4. Click the ***Run*** button to start generate a synthetic data using the patient set:
+
+    ![Click the Run Button](img/click_run.png)
+
+    You should see a progress modal:
+
+    ![Progress Modal](img/progress.png)
+
+Once the progress is done, you should see the summary chart:
+
+![Progress Finished](img/progress_finished.png)
+
+Click the ***Download Synthetic Data Tables*** button on the top right to download the generated synthetic data files:
+
+![Click to Download](img/click_download.png)
