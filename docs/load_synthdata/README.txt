@@ -26,3 +26,7 @@ Import data from 'visit_dimension.csv' file
 ----------------------------------------
 psql postgresql://i2b2demodata:demouser@localhost:5432/i2b2 -c "\\copy public.visit_dimension(encounter_num,patient_num,start_date,sourcesystem_cd) FROM 'visit_dimension.csv' WITH CSV HEADER DELIMITER E','"
 
+Import data from 'diagnosis.csv' file
+----------------------------------------
+psql postgresql://i2b2demodata:demouser@localhost:5432/i2b2 -c "\\copy public.observation_fact(encounter_num,patient_num,concept_cd,start_date,provider_id,sourcesystem_cd) FROM 'diagnosis.csv' WITH CSV HEADER DELIMITER E','"
+
