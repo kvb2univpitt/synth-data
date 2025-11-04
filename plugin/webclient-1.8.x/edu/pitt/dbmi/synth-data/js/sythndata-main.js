@@ -79,6 +79,28 @@ i2b2.sythndata.rest.fetchStaticList = function (successHandler, errorHandler) {
         error: errorHandler
     });
 };
+i2b2.sythndata.rest.fetchResultHistoryList = function (successHandler, errorHandler) {
+    $.ajax({
+        type: 'GET', // For jQuery < 1.9
+        method: 'GET',
+        cache: false,
+        dataType: 'json',
+        crossDomain: 'true',
+        url: i2b2.sythndata.rest.url + '/resultHistory',
+        success: successHandler,
+        error: errorHandler
+    });
+};
+i2b2.sythndata.rest.fetchResultStatsData = function (stat_filename, successHandler, errorHandler) {
+    $.ajax({
+        type: 'GET', // For jQuery < 1.9
+        method: 'GET',
+        dataType: 'json',
+        url: i2b2.sythndata.rest.url + '/result/stats/' + stat_filename,
+        success: successHandler,
+        error: errorHandler
+    });
+};
 i2b2.sythndata.rest.fetchDemographicData = function (data, successHandler, errorHandler) {
     $.ajax({
         type: 'get',
@@ -162,8 +184,25 @@ i2b2.sythndata.event.onclickContinue = function () {
 };
 i2b2.sythndata.event.onclickDownload = function () {
     i2b2.model.currentTask.fileDownloaded = true;
-    
+
     return true;
+};
+i2b2.sythndata.event.onclickViewStats = function (stats_filename) {
+    i2b2.sythndata.modal.progress.show();
+    i2b2.sythndata.getResultStatsData(stats_filename).then(data => {
+        i2b2.sythndata.successRetrievePreviousRunData(data);
+        setTimeout(() => {
+            i2b2.sythndata.modal.progress.hide();
+            i2b2.sythndata.view.showSynthDataGenStatus();
+        }, 1000);
+    }).catch((error) => {
+        setTimeout(() => {
+            i2b2.sythndata.modal.progress.hide();
+            i2b2.sythndata.view.showErrorStatus('Retrieve Previous Data Failed', 'Could not retrieve previous data from server.');
+        }, 1000);
+
+        console.log(error);
+    });
 };
 
 // initiate a synthetic dataset processing job.
@@ -338,6 +377,60 @@ i2b2.sythndata.plot.icdAgeDistributionChart = function (fa, fb, icdOpt, viewOpt,
     }
 };
 
+i2b2.sythndata.successRetrievePreviousRunData = function (results) {
+    const serverURL = i2b2.sythndata.rest.url;
+
+    //pass return results in so they display.
+    const downloadURLzip = serverURL + '/patientSet/zip/' + results.output_filename_zip;
+    $('#downloadSynthData').attr('href', downloadURLzip);
+
+    $('#patientSetName').text(results.output_filename_zip.replace(".zip", ""));
+
+    i2b2.sythndata.table.resultSummary(results);
+    i2b2.sythndata.table.tTest(results);
+
+    i2b2.sythndata.plot.ageSourceAndSynth(results);
+
+    // comparison charts
+    const viewOption = $('#compViewOptions option:selected').val();
+    i2b2.sythndata.plot.comparisonCharts(results, viewOption);
+
+
+    // top comorbidity charts
+    const source_related_cd = results.cohort_statistics.source_related_list_icd;
+    const synth_related_cd = results.cohort_statistics.synth_related_list_icd;
+    const mainkeysa = Object.keys(source_related_cd);
+    const mainkeysb = Object.keys(synth_related_cd);
+
+    // add options to select
+    mainkeysa.filter(value => mainkeysb.includes(value))
+            .forEach(option => $('#icdCodeOptions').append($('<option>', {value: option, text: option})));
+
+    const icdCodeOption = $('#icdCodeOptions option:selected').val();
+    i2b2.sythndata.plot.relatedCDChart(source_related_cd, synth_related_cd, icdCodeOption);
+
+    // ICD age distribution
+    const fa = results.cohort_statistics.src_icd_age_dist;
+    const fb = results.cohort_statistics.synth_icd_age_dist;
+    i2b2.sythndata.plot.icdAgeDistributionChart(fa, fb, icdCodeOption, viewOption, 'icdAgeDistributionChart');
+
+    // set action listeners
+    $('#compViewOptions').on('change', function () {
+        const viewOpt = $('#compViewOptions option:selected').val();
+        const icdCodeOpt = $('#icdCodeOptions option:selected').val();
+
+        i2b2.sythndata.plot.comparisonCharts(results, viewOpt);
+        i2b2.sythndata.plot.icdAgeDistributionChart(fa, fb, icdCodeOpt, viewOpt, 'icdAgeDistributionChart');
+    });
+    $('#icdCodeOptions').on('change', function () {
+        const viewOpt = $('#compViewOptions option:selected').val();
+        const icdCodeOpt = $('#icdCodeOptions option:selected').val();
+
+        i2b2.sythndata.plot.relatedCDChart(source_related_cd, synth_related_cd, icdCodeOpt);
+        i2b2.sythndata.plot.icdAgeDistributionChart(fa, fb, icdCodeOpt, viewOpt, 'icdAgeDistributionChart');
+    });
+};
+
 i2b2.sythndata.successSyntheticDataGeneration = function (results) {
     const serverURL = i2b2.sythndata.rest.url;
     const origData = i2b2.model.currentRec.origData;
@@ -481,6 +574,19 @@ i2b2.sythndata.getDemographicData = function (patientSetId, sc_value, ttest_valu
         };
 
         i2b2.sythndata.rest.fetchDemographicData(data, successHandler, errorHandler);
+    });
+};
+i2b2.sythndata.getResultStatsData = function (stat_filename) {
+    return new Promise((resolve, reject) => {
+        const successHandler = function (data) {
+            resolve(data);
+        };
+        const errorHandler = function (err) {
+            console.error(err);
+            reject(err);
+        };
+
+        i2b2.sythndata.rest.fetchResultStatsData(stat_filename, successHandler, errorHandler);
     });
 };
 
@@ -718,6 +824,24 @@ i2b2.sythndata.getStaticList = function () {
     i2b2.sythndata.rest.fetchStaticList(successHandler, errorHandler);
 };
 
+i2b2.sythndata.getResultHistoryList = function (datatable) {
+    const successHandler = function (data) {
+        datatable.clear();
+        data.forEach(result => {
+            datatable.row.add([
+                result.name,
+                result.created,
+                `<button type="button" class="btn btn-success btn-sm" onclick="i2b2.sythndata.event.onclickViewStats('${result.filename}');">View Results</button>`
+            ]);
+        });
+        datatable.draw();
+    };
+    const errorHandler = function (err) {
+        console.error(err);
+    };
+    i2b2.sythndata.rest.fetchResultHistoryList(successHandler, errorHandler);
+};
+
 i2b2.sythndata.patientSetDropped = function (sdxData) {
     const title = i2b2.sythndata.h.Escape(sdxData.sdxInfo.sdxDisplayName);
 
@@ -744,10 +868,29 @@ window.addEventListener("I2B2_READY", () => {
         i2b2.model.currentRec = null;
         i2b2.model.currentTask = null;
 
+        const resultHistoryTable = new DataTable('#result_history', {
+            columnDefs: [
+                {targets: 0, className: 'align-middle'},
+                {
+                    targets: 1,
+                    className: 'align-middle',
+                    render: function (data, type, row, meta) {
+                        return moment(data * 1000).format('LLL');
+                    }
+                },
+                {targets: 2, className: 'align-middle text-end', orderable: false, searchable: false}
+            ],
+            order: [[1, 'desc']]
+        });
+
         i2b2.sythndata.getStaticList();
 
         $('#runQuery').click(i2b2.sythndata.event.onclickRun);
         $('#continueLast').click(i2b2.sythndata.event.onclickContinue);
         $('#downloadSynthData').click(i2b2.sythndata.event.onclickDownload);
+
+        $('#nav-history-tab').click(function () {
+            i2b2.sythndata.getResultHistoryList(resultHistoryTable);
+        });
     });
 });
