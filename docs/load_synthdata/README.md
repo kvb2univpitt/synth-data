@@ -81,3 +81,145 @@ To import other synthetic visit data into the **VISIT_DIMENSION** table, execute
 ```sql
 psql postgresql://i2b2demodata:demouser@localhost:5432/i2b2 -c "\\copy public.visit_dimension(encounter_num,patient_num,start_date,sourcesystem_cd) FROM 'visit_dimension.csv' WITH CSV HEADER DELIMITER E','"
 ```
+
+## Loading Data in Oracle
+
+### Prerequisites
+
+- Oracle Instant Client.
+- Database connection configured using ***tnsnames.ora*** file.
+
+### Sample Configuration
+
+
+Assuming the following database configuration:
+
+| Attribute | Value     |
+|-----------|-----------|
+| Host      | localhost |
+| Port      | 1521      |
+| Database  | i2b2      |
+
+Assuming the following i2b2 database account:
+
+| User         | Password |
+|--------------|----------|
+| i2b2demodata | demouser |
+
+### Importing Observation Fact
+
+#### Importing Observation Fact Data Containing Only Diagnosis ICD Code
+
+Create the following Oracle database control file called **diagnosis.ctl** in the same directory as the file **diagnosis.csv**:
+
+```sql
+options (direct=true,skip=1)
+LOAD data
+infile 'diagnosis.csv'
+append
+into table OBSERVATION_FACT
+fields terminated by ','
+trailing nullcols
+(
+    ENCOUNTER_NUM,
+    PATIENT_NUM,
+    CONCEPT_CD,
+    START_DATE DATE 'YYYY-MM-DD',
+    PROVIDER_ID,
+    SOURCESYSTEM_CD
+)
+```
+
+Execute the following command to import data:
+
+```
+sqlldr i2b2demodata/'demouser'@i2b2 control="diagnosis.ctl"
+```
+
+#### Importing Observation Fact Data Containing All Other ICD Codes
+
+Create the following Oracle database control file called **observation_fact.ctl** in the same directory as the file **observation_fact.csv**:
+
+```sql
+options (direct=true,skip=1)
+LOAD data
+infile 'observation_fact.csv'
+append
+into table OBSERVATION_FACT
+fields terminated by ','
+OPTIONALLY ENCLOSED BY '"'
+trailing nullcols
+(
+    PATIENT_NUM,
+    ENCOUNTER_NUM,
+    START_DATE DATE 'YYYY-MM-DD HH24:MI:SS',
+    CONCEPT_CD,
+    VALTYPE_CD,
+    TVAL_CHAR,
+    NVAL_NUM,
+    UNITS_CD,
+    VALUEFLAG_CD,
+    PROVIDER_ID,
+    SOURCESYSTEM_CD
+)
+```
+
+Execute the following command to import data:
+
+```
+sqlldr i2b2demodata/'demouser'@i2b2 control="observation_fact.ctl"
+```
+
+### Importing Patient Dimension
+
+Create the following Oracle database control file called **patient_dimension.ctl** in the same directory as the file **patient_dimension.csv**:
+
+```sql
+options (direct=true,skip=1)
+LOAD data
+infile 'patient_dimension.csv'
+append
+into table PATIENT_DIMENSION
+fields terminated by ','
+trailing nullcols
+(
+    PATIENT_NUM,
+    BIRTH_DATE DATE 'YYYY-MM-DD',
+    RACE_CD,
+    SEX_CD,
+    AGE_IN_YEARS_NUM,
+    SOURCESYSTEM_CD
+)
+```
+
+Execute the following command to import data:
+
+```
+sqlldr i2b2demodata/'demouser'@i2b2 control="patient_dimension.ctl"
+```
+
+### Importing Visit Dimension
+
+Create the following Oracle database control file called **visit_dimension.ctl** in the same directory as the file **visit_dimension.csv**:
+
+```sql
+options (direct=true,skip=1)
+LOAD data
+infile 'visit_dimension.csv'
+append
+into table VISIT_DIMENSION
+fields terminated by ','
+trailing nullcols
+(
+    ENCOUNTER_NUM,
+    PATIENT_NUM,
+    START_DATE DATE 'YYYY-MM-DD',
+    SOURCESYSTEM_CD
+)
+```
+
+Execute the following command to import data:
+
+```
+sqlldr i2b2demodata/'demouser'@i2b2 control="visit_dimension.ctl"
+```
