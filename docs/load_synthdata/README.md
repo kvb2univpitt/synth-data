@@ -20,7 +20,14 @@ The synthetic data are generated based on the first four patient visits.  Below 
 
 The ***diagnosis.csv*** contains only diagnosis ICD codes while the ***observation_fact.csv*** file contains all other ICD codes.
 
-## Loading the Synthetic Data into the I2b2 Database
+## Loading Data in PostgreSQL
+
+### Prerequisites
+
+- PostgreSQL client
+
+### Sample Configuration
+
 
 Assuming the following database configuration:
 
@@ -36,7 +43,8 @@ Assuming the following i2b2 database account:
 |--------------|----------|
 | i2b2demodata | demouser |
 
-### Loading Data in PostgreSQL
+
+### Importing Observation Fact
 
 The **OBSERVATION_FACT** table in PostgreSQL contains the ***text_search_index*** column for indicing purposes.  This column must be dropped to insert the synthetic data.  The ***text_search_index*** column can later be added back once the synthetic data is loaded.
 
@@ -58,11 +66,15 @@ To import other synthetic observation fact data into the **OBSERVATION_FACT** ta
 psql postgresql://i2b2demodata:demouser@localhost:5432/i2b2 -c "\\copy public.observation_fact(patient_num,encounter_num,start_date,concept_cd,valtype_cd,tval_char,nval_num,units_cd,valueflag_cd,provider_id,sourcesystem_cd) FROM 'observation_fact.csv' WITH CSV HEADER DELIMITER E','"
 ```
 
+### Importing Patient Information
+
 To import other synthetic patient data into the **PATIENT_DIMENSION** table, execute the following:
 
 ```sql
 psql postgresql://i2b2demodata:demouser@localhost:5432/i2b2 -c "\\copy public.patient_dimension(patient_num,birth_date,race_cd,sex_cd,age_in_years_num,sourcesystem_cd) FROM 'patient_dimension.csv' WITH CSV HEADER DELIMITER E','"
 ```
+
+### Importing Visit Information
 
 To import other synthetic visit data into the **VISIT_DIMENSION** table, execute the following:
 
